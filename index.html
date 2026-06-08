@@ -16690,6 +16690,16 @@
 
       panelGrupo.innerHTML = `
         <div class='grupo-info'>
+        <div class='acciones-grupo'>
+          <button type='button' class='btn-sec' id='cargarResultadosOficiales'>Cargar resultados oficiales</button>
+          <button type='button' class='btn-pri' id='guardarGrupo'>Guardar grupo ${grupoActivo}</button>
+          <button type='button' class='btn-sec' id='limpiarGrupo'>Limpiar grupo ${grupoActivo}</button>
+          
+          <hr style="margin: 15px 0;">
+          <button type='button' class='btn-pri' style='background-color: #0047ab;' id='cargarTodosLosGrupos'>Cargar resultados oficiales de TODOS los grupos</button>
+        </div>
+
+        
           <span>Grupo ${grupoActivo}: ${completos} / 6 resultados cargados</span>
           <span>Equipos bloqueados segun planilla. Solo puedes editar goles.</span>
         </div>
@@ -16797,6 +16807,26 @@
         estadoGuardado.textContent = `Grupo ${grupoActivo} restablecido a la planilla de partidos.`;
         renderContenidoPrincipal();
       });
+
+      
+      document.getElementById('cargarTodosLosGrupos').addEventListener('click', async () => {
+        if (!confirm("¿Estás seguro de que deseas cargar los resultados oficiales de TODOS los grupos a la vez?")) return;
+
+        const grupos = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H']; // Ajusta esta lista si faltan o sobran grupos
+        estadoGuardado.textContent = "Cargando resultados para todos los grupos...";
+
+        try {
+            for (const grupo of grupos) {
+                // Reutilizamos tu función actual
+                await cargarResultadosOficialesGrupo(grupo);
+            }
+            estadoGuardado.textContent = `Todos los grupos se han actualizado correctamente (${new Date().toLocaleString('es-CL')}).`;
+            renderContenidoPrincipal(); // Refrescamos la vista para mostrar los cambios
+        } catch (error) {
+            estadoGuardado.textContent = `Error al cargar resultados masivos: ${error.message || error}`;
+        }
+      });
+      
     }
 
     function renderContenidoPrincipal() {
