@@ -17133,6 +17133,7 @@
 </script>
 <script>
 (function() {
+    // Usamos la misma hoja 1 (gid=0) donde ahora está la columna L con el ID del próximo partido
     const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS49T7z8TqJVm0fFSXgApVwB3XB-h5S9nrkXr0NGe605vhmo0O_cBZG7_tZep1UTlna0kn1fJSa8Jx0/pub?gid=0&single=true&output=csv';
     let timerInterval = null;
     let partidoActual = null;
@@ -17161,16 +17162,12 @@
         return resultado;
     }
 
-    function normalizarColumna(nombre) {
-        return (nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
-    }
-
     function convertirFechaHora(fechaStr, horaStr) {
         if (!fechaStr || !horaStr) return null;
         fechaStr = fechaStr.trim();
         horaStr = horaStr.trim();
         let dia, mes, año = 2026;
-        // Formato "dd-mmm"
+        // Formato "dd-mmm" (ej. "18-jun")
         let partesGuion = fechaStr.split('-');
         if (partesGuion.length === 2) {
             dia = parseInt(partesGuion[0], 10);
@@ -17205,61 +17202,53 @@
             const lineas = csvText.split(/\r?\n/).filter(l => l.trim() !== '');
             if (lineas.length < 2) return null;
 
-            const headers = parseCSVRow(lineas[0]).map(h => normalizarColumna(h));
-            
-            // Buscar columna que contenga "sig_partido" o "siguiente"
-            const idxSigPartido = headers.findIndex(h => h.includes('sig_partido') || h.includes('siguiente'));
-            if (idxSigPartido === -1) {
-                console.error('No se encontró columna de siguiente partido');
+            // Leer la fila 2 (índice 1) que contiene el ID del próximo partido en la columna 11 (columna L)
+            // La columna L es la 12ª columna → índice 11 (0-based)
+            const primeraFilaDatos = parseCSVRow(lineas[1]);
+            if (primeraFilaDatos.length <= 11) {
+                console.error('No se pudo leer la columna L (índice 11)');
                 return null;
             }
-            
-            // La fila que contiene el ID del siguiente partido (asumimos que es la segunda fila o la que tenga valor)
-            let sigId = null;
-            let filaSig = null;
-            for (let i = 1; i < lineas.length; i++) {
-                const cols = parseCSVRow(lineas[i]);
-                if (cols.length > idxSigPartido && cols[idxSigPartido] && cols[idxSigPartido].trim() !== '') {
-                    sigId = cols[idxSigPartido].trim();
-                    filaSig = cols;
-                    break;
-                }
-            }
+            const sigId = primeraFilaDatos[11]?.trim();
             if (!sigId) {
-                console.error('No se encontró ID del siguiente partido');
+                console.error('No se encontró ID en la columna L de la fila 2');
                 return null;
             }
+            console.log('ID del próximo partido (desde columna L):', sigId);
+
+            // Ahora buscar la fila donde ID_PARTIDO coincida con sigId
+            const headers = parseCSVRow(lineas[0]).map(h => h.trim());
+            const idxIdPartido = headers.findIndex(h => h === 'ID_PARTIDO' || h === 'id_partido' || h === 'ID');
+            const idxLocalNombre = headers.findIndex(h => h === 'Local' && !/^\d+$/.test(h)); // la que contiene nombres, no goles
+            const idxVisitaNombre = headers.findIndex(h => h === 'Visita' && !/^\d+$/.test(h));
+            const idxFecha = headers.findIndex(h => h === 'Fecha');
+            const idxHora = headers.findIndex(h => h === 'Hora - Inicio' || h === 'Hora');
             
-            // Buscar la fila donde ID_PARTIDO coincida con sigId
-            const idxIdPartido = headers.findIndex(h => h === 'id_partido' || h === 'id');
-            if (idxIdPartido === -1) {
-                console.error('No se encontró columna ID_PARTIDO');
-                return null;
-            }
-            
-            // Buscar índices de local, visita, fecha, hora
-            // Según la estructura, después de "Orden" vienen los nombres de equipos
-            const idxGrupo = headers.findIndex(h => h === 'grupo');
-            const idxOrden = headers.findIndex(h => h === 'orden');
-            const idxFecha = headers.findIndex(h => h === 'fecha');
-            const idxHora = headers.findIndex(h => h === 'hora - inicio' || h === 'hora');
-            
-            if (idxGrupo === -1 || idxOrden === -1 || idxFecha === -1 || idxHora === -1) {
-                console.error('No se encontraron columnas necesarias');
-                return null;
-            }
-            
-            // Local y visita están desplazados respecto a Orden
-            const idxLocalNombre = idxOrden + 1;
-            const idxVisitaNombre = idxOrden + 3;
+            // Si no encontramos las columnas por nombre, usamos índices fijos basados en la estructura conocida
+            // (ID_PARTIDO en col0, Local nombre en col5, Visita nombre en col7, Fecha en col9, Hora en col10)
+            const usarIndicesFijos = (idxIdPartido === -1 || idxLocalNombre === -1 || idxVisitaNombre === -1 || idxFecha === -1 || idxHora === -1);
             
             for (let i = 1; i < lineas.length; i++) {
                 const cols = parseCSVRow(lineas[i]);
-                if (cols.length > idxIdPartido && cols[idxIdPartido] && cols[idxIdPartido].trim() === sigId) {
-                    const local = cols[idxLocalNombre]?.trim();
-                    const visita = cols[idxVisitaNombre]?.trim();
-                    const fechaStr = cols[idxFecha]?.trim();
-                    const horaStr = cols[idxHora]?.trim();
+                let idActual;
+                if (usarIndicesFijos) {
+                    idActual = cols[0]?.trim();  // columna A es índice 0
+                } else {
+                    idActual = cols[idxIdPartido]?.trim();
+                }
+                if (idActual === sigId) {
+                    let local, visita, fechaStr, horaStr;
+                    if (usarIndicesFijos) {
+                        local = cols[5]?.trim();   // columna F (índice 5) nombre local
+                        visita = cols[7]?.trim();  // columna H (índice 7) nombre visita
+                        fechaStr = cols[9]?.trim(); // columna J (índice 9) fecha
+                        horaStr = cols[10]?.trim(); // columna K (índice 10) hora
+                    } else {
+                        local = cols[idxLocalNombre]?.trim();
+                        visita = cols[idxVisitaNombre]?.trim();
+                        fechaStr = cols[idxFecha]?.trim();
+                        horaStr = cols[idxHora]?.trim();
+                    }
                     if (local && visita && fechaStr && horaStr) {
                         const fechaPartido = convertirFechaHora(fechaStr, horaStr);
                         if (fechaPartido) {
@@ -17305,7 +17294,19 @@
         const ahora = new Date();
         const diff = partidoActual.fecha - ahora;
         const { texto, esFuturo } = formatearTiempo(diff);
-        const estado = esFuturo ? `Faltan: ${texto}` : `En juego (transcurrido: ${texto})`;
+        
+        let estado = '';
+        if (esFuturo) {
+            estado = `⏳ Faltan: ${texto}`;
+        } else {
+            // Si ya pasó más de 2 horas, asumimos finalizado
+            if (Math.abs(diff) > 2 * 60 * 60 * 1000) {
+                estado = `🏁 Finalizado (hace ${texto})`;
+            } else {
+                estado = `⚽ En juego (transcurrido: ${texto})`;
+            }
+        }
+        
         const textoPartido = `⚽ ${partidoActual.local} vs ${partidoActual.visita} – ${partidoActual.fechaTexto} ${partidoActual.horaTexto}`;
         document.getElementById('proximoPartidoTexto').innerHTML = textoPartido;
         document.getElementById('contadorRegresivo').innerHTML = estado;
@@ -17314,7 +17315,7 @@
     async function cargarYComenzar() {
         partidoActual = await obtenerPartidoDesdeCSV();
         if (!partidoActual) {
-            document.getElementById('proximoPartidoTexto').innerHTML = 'No se pudo determinar el próximo partido.';
+            document.getElementById('proximoPartidoTexto').innerHTML = '⚠️ No se encontró el ID del próximo partido en la columna L (fila 2). Verifica que esté escrito correctamente.';
             document.getElementById('contadorRegresivo').innerHTML = '';
             return;
         }
