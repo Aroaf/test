@@ -17293,12 +17293,10 @@
 </script>
 <script>
 (function() {
-    // Misma URL de tu hoja de cálculo
     const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS49T7z8TqJVm0fFSXgApVwB3XB-h5S9nrkXr0NGe605vhmo0O_cBZG7_tZep1UTlna0kn1fJSa8Jx0/pub?gid=0&single=true&output=csv';
     let timerInterval = null;
     let proximoPartidoData = null;
 
-    // Parseo robusto de CSV (respeta comillas)
     function parseCSVRow(linea) {
         const resultado = [];
         let actual = '';
@@ -17323,20 +17321,16 @@
         return resultado;
     }
 
-    // Normalizar nombre de columna (minúsculas, sin acentos, sin espacios)
     function normalizarColumna(nombre) {
         return (nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
     }
 
-    // Convertir fecha/hora a objeto Date (año 2026)
     function convertirFechaHora(fechaStr, horaStr) {
         if (!fechaStr || !horaStr) return null;
-        // Limpiar
         fechaStr = fechaStr.trim();
         horaStr = horaStr.trim();
-        
-        let dia, mes, año = 2026; // torneo en 2026
-        // Intentar formato "dd-mmm" (ej. "11-jun")
+        let dia, mes, año = 2026;
+        // Formato "dd-mmm" (11-jun)
         let partesGuion = fechaStr.split('-');
         if (partesGuion.length === 2) {
             dia = parseInt(partesGuion[0], 10);
@@ -17345,7 +17339,7 @@
             mes = meses[nombreMes];
             if (isNaN(dia) || mes === undefined) return null;
         } else {
-            // Intentar formato "mm/dd/yyyy" (ej. "06/18/2026")
+            // Formato "mm/dd/yyyy" (06/18/2026)
             let partesBarra = fechaStr.split('/');
             if (partesBarra.length === 3) {
                 mes = parseInt(partesBarra[0], 10) - 1;
@@ -17356,19 +17350,11 @@
                 return null;
             }
         }
-        
-        // Parsear hora "HH:MM"
         let partesHora = horaStr.split(':');
         if (partesHora.length !== 2) return null;
         let hora = parseInt(partesHora[0], 10);
         let minuto = parseInt(partesHora[1], 10);
         if (isNaN(hora) || isNaN(minuto)) return null;
-        
-        // Crear fecha local (sin problemas de zona horaria usando Date.UTC)
-        // Para evitar desfases, usamos la construcción con hora local
-        // Nota: new Date(año, mes, día, hora, minuto) interpreta la hora en la zona horaria local del navegador.
-        // Para que el contador sea consistente, asumimos que la hora está en la misma zona que el usuario.
-        // Si quisieras horario fijo (ej. Chile), podrías ajustar.
         const fecha = new Date(año, mes, dia, hora, minuto, 0);
         return isNaN(fecha.getTime()) ? null : fecha;
     }
@@ -17380,43 +17366,45 @@
             const lineas = csvText.split(/\r?\n/).filter(l => l.trim() !== '');
             if (lineas.length < 2) return null;
             
-            // Leer encabezados
             const headers = parseCSVRow(lineas[0]).map(h => normalizarColumna(h));
             
-            // Buscar índices de columnas relevantes
-            const idxLocal = headers.findIndex(h => h === 'local' || h === 'equipo local');
-            const idxVisita = headers.findIndex(h => h === 'visita' || h === 'equipo visita');
+            // Buscar columnas importantes
+            const idxGrupo = headers.findIndex(h => h === 'grupo');
+            const idxOrden = headers.findIndex(h => h === 'orden');
             const idxFecha = headers.findIndex(h => h === 'fecha');
-            const idxHora = headers.findIndex(h => h === 'hora' || h === 'hora - inicio');
+            const idxHora = headers.findIndex(h => h === 'hora - inicio' || h === 'hora');
             const idxEstado = headers.findIndex(h => h === 'estado');
             
-            if (idxLocal === -1 || idxVisita === -1 || idxFecha === -1 || idxHora === -1) {
-                console.error('No se encontraron columnas necesarias en el CSV');
+            if (idxGrupo === -1 || idxOrden === -1 || idxFecha === -1 || idxHora === -1) {
+                console.error('No se encontraron columnas necesarias');
                 return null;
             }
+            
+            // Según la estructura, después de "Orden" vienen: local (string), "-", visita (string)
+            const idxLocalNombre = idxOrden + 1;
+            const idxVisitaNombre = idxOrden + 3;
             
             const partidos = [];
             const ahora = new Date();
             
             for (let i = 1; i < lineas.length; i++) {
                 const cols = parseCSVRow(lineas[i]);
-                if (cols.length <= Math.max(idxLocal, idxVisita, idxFecha, idxHora)) continue;
+                if (cols.length <= Math.max(idxLocalNombre, idxVisitaNombre, idxFecha, idxHora)) continue;
                 
-                const local = cols[idxLocal]?.trim();
-                const visita = cols[idxVisita]?.trim();
+                const local = cols[idxLocalNombre]?.trim();
+                const visita = cols[idxVisitaNombre]?.trim();
                 const fechaStr = cols[idxFecha]?.trim();
                 const horaStr = cols[idxHora]?.trim();
                 const estado = idxEstado !== -1 ? cols[idxEstado]?.trim().toLowerCase() : '';
                 
                 if (!local || !visita || !fechaStr || !horaStr) continue;
                 
-                // Si existe columna Estado, filtrar solo "notstarted" (o vacío). Si no, usamos fecha.
-                if (idxEstado !== -1 && estado !== 'notstarted' && estado !== '') continue;
+                // Filtrar solo partidos no comenzados (por estado o por fecha)
+                if (idxEstado !== -1 && estado !== 'notstarted') continue;
                 
                 const fechaPartido = convertirFechaHora(fechaStr, horaStr);
                 if (!fechaPartido) continue;
                 
-                // Solo partidos que aún no han comenzado (fecha futura)
                 if (fechaPartido > ahora) {
                     partidos.push({
                         local,
