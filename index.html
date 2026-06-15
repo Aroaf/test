@@ -17133,7 +17133,7 @@
 </script>
 <script>
 (function() {
-    // Usamos la misma hoja 1 (gid=0) donde ahora está la columna L con el ID del próximo partido
+    // Misma hoja 1 (gid=0)
     const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS49T7z8TqJVm0fFSXgApVwB3XB-h5S9nrkXr0NGe605vhmo0O_cBZG7_tZep1UTlna0kn1fJSa8Jx0/pub?gid=0&single=true&output=csv';
     let timerInterval = null;
     let partidoActual = null;
@@ -17200,21 +17200,20 @@
             const response = await fetch(URL_CSV + '?t=' + Date.now());
             const csvText = await response.text();
             const lineas = csvText.split(/\r?\n/).filter(l => l.trim() !== '');
-            if (lineas.length < 2) return null;
+            if (lineas.length < 3) return null;
 
-            // Leer la fila 2 (índice 1) que contiene el ID del próximo partido en la columna 11 (columna L)
-            // La columna L es la 12ª columna → índice 11 (0-based)
-            const primeraFilaDatos = parseCSVRow(lineas[1]);
-            if (primeraFilaDatos.length <= 11) {
-                console.error('No se pudo leer la columna L (índice 11)');
+            // Leer la FILA 3 (índice 2) que contiene el ID del próximo partido en la columna L (índice 11)
+            const terceraFila = parseCSVRow(lineas[2]);
+            if (terceraFila.length <= 11) {
+                console.error('No se pudo leer la columna L (índice 11) en la fila 3');
                 return null;
             }
-            const sigId = primeraFilaDatos[11]?.trim();
+            const sigId = terceraFila[11]?.trim();
             if (!sigId) {
-                console.error('No se encontró ID en la columna L de la fila 2');
+                console.error('No se encontró ID en la columna L de la fila 3');
                 return null;
             }
-            console.log('ID del próximo partido (desde columna L):', sigId);
+            console.log('ID del próximo partido (desde L3):', sigId);
 
             // Ahora buscar la fila donde ID_PARTIDO coincida con sigId
             const headers = parseCSVRow(lineas[0]).map(h => h.trim());
@@ -17315,7 +17314,7 @@
     async function cargarYComenzar() {
         partidoActual = await obtenerPartidoDesdeCSV();
         if (!partidoActual) {
-            document.getElementById('proximoPartidoTexto').innerHTML = '⚠️ No se encontró el ID del próximo partido en la columna L (fila 2). Verifica que esté escrito correctamente.';
+            document.getElementById('proximoPartidoTexto').innerHTML = '⚠️ No se encontró el ID del próximo partido en la columna L (fila 3). Verifica que esté escrito correctamente.';
             document.getElementById('contadorRegresivo').innerHTML = '';
             return;
         }
