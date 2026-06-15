@@ -397,13 +397,7 @@
     <div class='cabecera'>
       <h1>Pollita Mundial de Futbol 2026</h1>
       <p class='subtitulo'>Detalle completo de apuestas y panel de resultados por grupo.</p>
-        <div id="proximoPartidoInfo" style="margin-top: 12px; padding: 8px 12px; background-color: #e6f4ea; border-left: 4px solid #0f7a46; border-radius: 10px; font-size: 0.9rem;">
-          
-        </div>
-        <div id="proximoPartidoContainer" style="margin-top: 12px; padding: 10px; background: rgba(255,255,240,0.8); border-radius: 12px; text-align: center;">
-          <div id="proximoPartidoTexto" style="font-weight: bold; font-size: 1rem;">Cargando próximo partido...</div>
-          <div id="contadorRegresivo" style="font-size: 1.2rem; font-family: monospace; margin-top: 5px;"></div>
-        </div>
+      <div id="proximoPartidoInfo" style="margin-top: 12px; padding: 8px 12px; background-color: #e6f4ea; border-left: 4px solid #0f7a46; border-radius: 10px; font-size: 0.9rem;"></div>
     </div>
 
 
@@ -16995,7 +16989,19 @@
     });
 
     aplicarFiltros();
-    // ========== NUEVA FUNCIÓN PARA PRÓXIMO PARTIDO ==========
+  </script>
+  <section style="text-align: center; margin: 50px 0; padding: 20px; border-top: 2px solid #e2e8f0;">
+    <h2 style="color: var(--texto);">¿Tienes algún reclamo?</h2>
+    <p style="color: var(--texto-sec); margin-bottom: 20px;">
+         
+    </p>
+    <a href="https://www.fifa.com/es/contact" 
+       target="_blank" 
+       style="display: inline-block; background-color: var(--acento-2); color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; transition: background 0.3s;">
+       Ir
+    </a>
+  </section>
+// ========== NUEVA FUNCIÓN PARA PRÓXIMO PARTIDO ==========
 let listaCompletaPartidos = [];
 
 async function cargarProximoPartido() {
@@ -17094,18 +17100,6 @@ setTimeout(() => {
 
 // Si quieres que se actualice cada vez que se presiona "Cargar resultados oficiales",
 // puedes agregar esta línea dentro del evento click de ese botón (opcional, no es necesario)
-  </script>
-  <section style="text-align: center; margin: 50px 0; padding: 20px; border-top: 2px solid #e2e8f0;">
-    <h2 style="color: var(--texto);">¿Tienes algún reclamo?</h2>
-    <p style="color: var(--texto-sec); margin-bottom: 20px;">
-         
-    </p>
-    <a href="https://www.fifa.com/es/contact" 
-       target="_blank" 
-       style="display: inline-block; background-color: var(--acento-2); color: white; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; transition: background 0.3s;">
-       Ir
-    </a>
-  </section>
 <!-- ===================================================== -->
 <!-- BOTONES GLOBALES: Limpiar todos los grupos y Cargar todos los oficiales -->
 <!-- ===================================================== -->
@@ -17235,237 +17229,161 @@ setTimeout(() => {
 </script>
 <script>
 (function() {
-    // Misma hoja 1 (gid=0) donde ahora están L1, L2, L3 con la info del próximo partido
-    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS49T7z8TqJVm0fFSXgApVwB3XB-h5S9nrkXr0NGe605vhmo0O_cBZG7_tZep1UTlna0kn1fJSa8Jx0/pub?gid=0&single=true&output=csv';
-    let timerInterval = null;
-    let partidoData = null;   // almacenará { id, local, visita, fecha, hora, golesLocal, golesVisita }
-
-    function parseCSVRow(linea) {
-        const resultado = [];
-        let actual = '';
-        let enComillas = false;
-        for (let i = 0; i < linea.length; i++) {
-            const ch = linea[i];
-            if (ch === '"') {
-                if (enComillas && linea[i+1] === '"') {
-                    actual += '"';
-                    i++;
-                } else {
-                    enComillas = !enComillas;
-                }
-            } else if (ch === ',' && !enComillas) {
-                resultado.push(actual);
-                actual = '';
-            } else {
-                actual += ch;
-            }
-        }
-        resultado.push(actual);
-        return resultado;
-    }
-
-    function convertirFechaHora(fechaStr, horaStr) {
-        if (!fechaStr || !horaStr) return null;
-        fechaStr = fechaStr.trim();
-        horaStr = horaStr.trim();
-        let dia, mes, año = 2026;
-        // Formato "dd-mmm" (ej. "18-jun")
-        let partesGuion = fechaStr.split('-');
-        if (partesGuion.length === 2) {
-            dia = parseInt(partesGuion[0], 10);
-            const nombreMes = partesGuion[1].toLowerCase();
-            const meses = { ene:0, feb:1, mar:2, abr:3, may:4, jun:5, jul:6, ago:7, sep:8, oct:9, nov:10, dic:11 };
-            mes = meses[nombreMes];
-            if (isNaN(dia) || mes === undefined) return null;
-        } else {
-            // Formato "mm/dd/yyyy"
-            let partesBarra = fechaStr.split('/');
-            if (partesBarra.length === 3) {
-                mes = parseInt(partesBarra[0], 10) - 1;
-                dia = parseInt(partesBarra[1], 10);
-                año = parseInt(partesBarra[2], 10);
-                if (isNaN(dia) || isNaN(mes) || isNaN(año)) return null;
-            } else {
-                return null;
-            }
-        }
-        let partesHora = horaStr.split(':');
-        if (partesHora.length !== 2) return null;
-        let hora = parseInt(partesHora[0], 10);
-        let minuto = parseInt(partesHora[1], 10);
-        if (isNaN(hora) || isNaN(minuto)) return null;
-        return new Date(año, mes, dia, hora, minuto, 0);
-    }
-
-    async function obtenerInfoPartido() {
+    // --------------------------------------------------
+    // 1. CONFIGURACIÓN: ¡REEMPLAZA ESTO CON TU URL!
+    // --------------------------------------------------
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-XI-wqSxdXUhDbRw0mGI_7vA29pfB92PY1KhqsyFFTmydCBQWY39ccQzo_6xWtbVTwg/exec'; // <--- CAMBIA ESTA LÍNEA
+    
+    const STORAGE_KEY = 'usuario_actual_polla';
+    let participanteActual = null;
+    
+    // --------------------------------------------------
+    // 2. FUNCIONES PARA HABLAR CON EL CONTADOR
+    // --------------------------------------------------
+    async function registrarVisita(participante) {
+        if (!participante) return;
         try {
-            const response = await fetch(URL_CSV + '?t=' + Date.now());
-            const csvText = await response.text();
-            const lineas = csvText.split(/\r?\n/).filter(l => l.trim() !== '');
-            if (lineas.length < 3) return null;
-
-            // --- Leer L1, L2, L3 desde la tercera fila (índice 2) ---
-            // Asumimos que los encabezados están en la fila 1, y los datos de L1,L2,L3 están en la fila 3 (índice 2)
-            // Pero L1, L2, L3 están en la misma fila 3? Según el usuario, L1 y L2 están en esa fila también.
-            // Por seguridad, leemos la fila 2 (índice 1) y fila 3 (índice 2) para obtener fecha, hora e ID.
-            // Según la estructura: L1 (fecha), L2 (hora), L3 (ID). Todos en la fila 3 (índice 2).
-            const filaInfo = parseCSVRow(lineas[2]); // fila 3 (índice 2)
-            if (filaInfo.length <= 11) {
-                console.error('No se pudo leer la fila 3');
-                return null;
-            }
-            const fechaStr = filaInfo[11]?.trim();     // columna L (índice 11) -> L1? No, L1 sería columna L? Vamos a ver.
-            // En realidad, L1, L2, L3 son celdas de la columna L, pero en diferentes filas? El usuario dice:
-            // "la fecha y hora estan en la columna L1 y L2 respectivamente", eso significa que L1 es la celda L de la fila 1?
-            // Pero en CSV la fila 1 son encabezados. Entonces probablemente L1 = celda L de la fila 1 (encabezados no).
-            // Necesitamos aclarar: ¿L1, L2, L3 son filas 1,2,3 de la columna L?
-            // Según la imagen anterior, L2 tenía el ID M_44, y L3 no se veía. Ahora dice que L3 contiene el ID.
-            // Dado que es confuso, usaré la estructura más simple: leer la fila 2 (índice 1) para fecha y hora, y fila 3 (índice 2) para ID.
-            // Pero por la descripción, voy a asumir que en la fila 1 está la fecha, fila 2 la hora, fila 3 el ID.
-            // Re-leemos las tres filas:
-            const fila1 = parseCSVRow(lineas[0]); // encabezados? No, mejor usar índice 0 para fecha? No.
-            // Mejor: después de los encabezados, la fila 1 (índice 1) = primera fila de datos, podría contener fecha/hora.
-            // Para evitar confusiones, haré que el script sea flexible: buscará en las primeras 3 filas los valores no vacíos que parezcan fecha, hora, ID.
-            
-            // Simplifico: El usuario me dijo "la fecha y hora están en la columna L1 y L2 respectivamente" -> eso sugiere que en la fila 1 (debajo de encabezados) columna L está la fecha, fila 2 columna L está la hora, fila 3 columna L está el ID.
-            // Entonces:
-            const filaFecha = parseCSVRow(lineas[1]); // fila 2 (índice 1)
-            const filaHora = parseCSVRow(lineas[2]);  // fila 3 (índice 2)
-            const filaId   = parseCSVRow(lineas[3]);  // fila 4 (índice 3) si L3 es fila 3? No, L3 sería fila 3? Es confuso.
-            
-            // Usaré directamente la celda L de la fila 2 para fecha, fila 3 para hora, fila 4 para ID? No.
-            // Dado que el usuario ya simplificó, voy a asumir que los datos están en la fila 2 (índice 1) para todo: L1, L2, L3? Pero eso no tiene sentido.
-            
-            // Ante la duda, usaré el sistema anterior pero con lectura específica de celdas por coordenadas.
-            // Como es más fiable, le pediré al usuario que me confirme las filas exactas, pero para no alargar, haré que el script busque la primera fila que tenga un ID en la columna L (índice 11) y que no sea vacío, y que además en esa misma fila haya fecha y hora en columnas J y K (como antes).
-            // Así evitamos confusiones.
-            
-            // Por simplicidad, mantengo la versión anterior pero ahora fecha y hora se toman de la misma fila que el ID (fila 3, columna J y K).
-            // El usuario dice que la fecha y hora están en L1 y L2, pero si ya las aisló, posiblemente están en la fila 1 y fila 2 de la columna L.
-            // Lo más seguro es que el script actual (que lee L3 para ID y luego busca la fila) ya funcionaba, pero fallaba porque fecha y hora no estaban.
-            // Ahora fecha y hora están en L1 y L2, entonces podemos leerlas directamente de la fila 1 y fila 2 de la columna L.
-            
-            // Nueva versión: leer fecha de fila 2 (índice 1) columna L, hora de fila 3 (índice 2) columna L, ID de fila 4 (índice 3) columna L? No.
-            
-            // Mejor: Leamos la fila donde está el ID (fila 3, índice 2) y de ahí extraemos fecha y hora desde las columnas J y K (como antes).
-            // Eso es más directo y ya funcionaba parcialmente.
-            
-            // Por tanto, usaré la lógica anterior pero confiando en que los datos están en la fila del ID (columna J y K).
-            
-            const filaIdPartido = parseCSVRow(lineas[2]); // fila 3 (índice 2) donde está M_44 en col L (índice 11)
-            const sigId = filaIdPartido[11]?.trim();
-            if (!sigId) {
-                console.error('No se encontró ID en L3');
-                return null;
-            }
-            console.log('ID del próximo partido (L3):', sigId);
-            
-            // Buscar la fila del partido por ID
-            const headers = parseCSVRow(lineas[0]).map(h => h.trim());
-            const idxId = 0; // columna A
-            const idxGolLocal = 1; // columna B
-            const idxGolVisita = 2; // columna C
-            const idxLocalNombre = 5; // columna F
-            const idxVisitaNombre = 7; // columna H
-            const idxFecha = 9; // columna J
-            const idxHora = 10; // columna K
-            
-            for (let i = 1; i < lineas.length; i++) {
-                const cols = parseCSVRow(lineas[i]);
-                if (cols[0]?.trim() === sigId) {
-                    const local = cols[idxLocalNombre]?.trim();
-                    const visita = cols[idxVisitaNombre]?.trim();
-                    const fechaStr = cols[idxFecha]?.trim();
-                    const horaStr = cols[idxHora]?.trim();
-                    const golesLocal = cols[idxGolLocal]?.trim();
-                    const golesVisita = cols[idxGolVisita]?.trim();
-                    if (local && visita && fechaStr && horaStr) {
-                        const fechaPartido = convertirFechaHora(fechaStr, horaStr);
-                        if (fechaPartido) {
-                            return {
-                                id: sigId,
-                                local: local,
-                                visita: visita,
-                                fecha: fechaPartido,
-                                fechaTexto: fechaStr,
-                                horaTexto: horaStr,
-                                golesLocal: golesLocal !== '' ? golesLocal : null,
-                                golesVisita: golesVisita !== '' ? golesVisita : null
-                            };
-                        }
-                    }
-                }
-            }
-            return null;
-        } catch(e) {
-            console.error('Error:', e);
-            return null;
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ participante: participante })
+            });
+            console.log(`✅ Visita registrada para: ${participante}`);
+        } catch (err) {
+            console.error('❌ Error al registrar visita:', err);
         }
     }
-
-    function formatearTiempo(milisegundos) {
-        const esFuturo = milisegundos >= 0;
-        const absMs = Math.abs(milisegundos);
-        const segundosTotales = Math.floor(absMs / 1000);
-        const dias = Math.floor(segundosTotales / 86400);
-        const horas = Math.floor((segundosTotales % 86400) / 3600);
-        const minutos = Math.floor((segundosTotales % 3600) / 60);
-        const segundos = segundosTotales % 60;
-        let texto = '';
-        if (dias > 0) texto += `${dias}d `;
-        texto += `${horas.toString().padStart(2,'0')}h ${minutos.toString().padStart(2,'0')}m ${segundos.toString().padStart(2,'0')}s`;
-        return { texto, esFuturo };
-    }
-
-    function actualizarUI() {
-        if (!partidoData || !partidoData.fecha) {
-            document.getElementById('proximoPartidoTexto').innerHTML = 'No hay información del próximo partido';
-            document.getElementById('contadorRegresivo').innerHTML = '';
-            return;
+    
+    async function obtenerVisitas(participante) {
+        if (!participante) return 0;
+        try {
+            const url = `${SCRIPT_URL}?participante=${encodeURIComponent(participante)}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            return data.visitas || 0;
+        } catch (err) {
+            console.error('Error al obtener visitas:', err);
+            return 0;
         }
-        const ahora = new Date();
-        const diff = partidoData.fecha - ahora;
-        const { texto, esFuturo } = formatearTiempo(diff);
-        
-        let estado = '';
-        let marcador = '';
-        
-        if (esFuturo) {
-            estado = `⏳ Faltan: ${texto}`;
-        } else {
-            // Si ya pasó más de 2 horas, asumimos finalizado
-            if (Math.abs(diff) > 2 * 60 * 60 * 1000) {
-                estado = `🏁 Finalizado (hace ${texto})`;
-            } else {
-                estado = `⚽ En juego (transcurrido: ${texto})`;
-                // Mostrar resultado parcial si tenemos goles
-                if (partidoData.golesLocal !== null && partidoData.golesVisita !== null) {
-                    marcador = ` | ${partidoData.golesLocal} - ${partidoData.golesVisita}`;
-                }
-            }
-        }
-        
-        const textoPartido = `⚽ ${partidoData.local} vs ${partidoData.visita} – ${partidoData.fechaTexto} ${partidoData.horaTexto}${marcador}`;
-        document.getElementById('proximoPartidoTexto').innerHTML = textoPartido;
-        document.getElementById('contadorRegresivo').innerHTML = estado;
     }
-
-    async function cargarYComenzar() {
-        partidoData = await obtenerInfoPartido();
-        if (!partidoData) {
-            document.getElementById('proximoPartidoTexto').innerHTML = '⚠️ No se pudo obtener la información del próximo partido. Verifica L3, y que la fila del partido tenga fecha y hora.';
-            document.getElementById('contadorRegresivo').innerHTML = '';
-            return;
-        }
-        if (timerInterval) clearInterval(timerInterval);
-        actualizarUI();
-        timerInterval = setInterval(actualizarUI, 1000);
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', cargarYComenzar);
+    
+    // --------------------------------------------------
+    // 3. OBTENER LA LISTA DE PARTICIPANTES (DESDE TU FILTRO)
+    // --------------------------------------------------
+    let participantesLista = [];
+    const selectOriginal = document.getElementById('filtroParticipante');
+    if (selectOriginal) {
+        participantesLista = Array.from(selectOriginal.options)
+            .map(opt => opt.value)
+            .filter(v => v !== 'todos');
     } else {
-        cargarYComenzar();
+        // Lista de respaldo (cámbiala si es necesario)
+        participantesLista = [
+            "Ariel", "Camilo", "Carito", "Claudio Padilla", "Daniela", "Diego Toledo",
+            "Felipe Bustos", "Felipe HD", "Grace", "Karen Garrido", "Lando", "Leo",
+            "Marcelitocuerdas", "Marrosquino", "María Isabel", "Miry", "Pablo Meliqueo", "Papasote ALV",
+            "Rocio", "Rodrigo Arriaza", "Sergio Luigi", "Stuart"
+        ];
+    }
+    
+    // --------------------------------------------------
+    // 4. MOSTRAR EL USUARIO Y SUS VISITAS EN LA CABECERA
+    // --------------------------------------------------
+    function mostrarUsuarioActual(nombre) {
+        if (!nombre) return;
+        const existing = document.getElementById('usuarioActualDiv');
+        if (existing) existing.remove();
+        
+        const userDiv = document.createElement('div');
+        userDiv.id = 'usuarioActualDiv';
+        userDiv.style.cssText = 'display:flex; align-items:center; gap:15px; margin-top:8px; font-size:14px; background-color:#e9ecef; padding:5px 15px; border-radius:30px; width:fit-content;';
+        
+        userDiv.innerHTML = `
+            <span>👤 <strong>${escapeHtml(nombre)}</strong></span>
+            <span id="visitasParticipante">👁️ Visitas: <span id="contadorValor">--</span></span>
+            <button id="btnCambiarUsuario" style="background:none; border:none; color:#0047ab; cursor:pointer; font-weight:bold; text-decoration:underline;">Cambiar usuario</button>
+        `;
+        
+        const cabecera = document.querySelector('.cabecera');
+        if (cabecera) cabecera.appendChild(userDiv);
+        
+        obtenerVisitas(nombre).then(visitas => {
+            const spanValor = document.getElementById('contadorValor');
+            if (spanValor) spanValor.textContent = visitas;
+        });
+        
+        document.getElementById('btnCambiarUsuario')?.addEventListener('click', () => {
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        });
+    }
+    
+    // --------------------------------------------------
+    // 5. MOSTRAR EL MODAL DE SELECCIÓN DE USUARIO
+    // --------------------------------------------------
+    function mostrarModal() {
+        if (document.getElementById('modalLogin')) return;
+        
+        const modal = document.createElement('div');
+        modal.id = 'modalLogin';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:10000; backdrop-filter:blur(3px);';
+        
+        const modalContent = document.createElement('div');
+        modalContent.style.cssText = 'background:#fff; border-radius:20px; padding:30px; width:90%; max-width:400px; text-align:center; box-shadow:0 20px 35px rgba(0,0,0,0.3);';
+        modalContent.innerHTML = `
+            <h2 style="margin-top:0;">👋 Bienvenido a LuigiBET 2026</h2>
+            <p>Selecciona tu nombre para continuar:</p>
+            <select id="selectUsuario" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:16px; margin-bottom:20px;">
+                <option value="">-- Elige tu usuario --</option>
+                ${participantesLista.map(p => `<option value="${p.replace(/"/g, '&quot;')}">${p}</option>`).join('')}
+            </select>
+            <button id="btnConfirmarUsuario" style="background:linear-gradient(135deg,#0f7a46,#0c663a); color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:bold; cursor:pointer; width:100%;">Ingresar</button>
+            <p style="font-size:12px; color:#666; margin-top:20px;">* Tus apuestas se mantendrán asociadas a este nombre.</p>
+        `;
+        modal.appendChild(modalContent);
+        document.body.appendChild(modal);
+        
+        const btnConfirmar = document.getElementById('btnConfirmarUsuario');
+        const selectUsuario = document.getElementById('selectUsuario');
+        
+        const seleccionar = async () => {
+            const nombre = selectUsuario.value;
+            if (nombre) {
+                localStorage.setItem(STORAGE_KEY, nombre);
+                await registrarVisita(nombre);
+                modal.remove();
+                mostrarUsuarioActual(nombre);
+            } else {
+                alert('Por favor selecciona un participante.');
+            }
+        };
+        
+        btnConfirmar.addEventListener('click', seleccionar);
+        selectUsuario.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') seleccionar();
+        });
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    // --------------------------------------------------
+    // 6. INICIAR AL CARGAR LA PÁGINA
+    // --------------------------------------------------
+    const usuarioGuardado = localStorage.getItem(STORAGE_KEY);
+    if (usuarioGuardado && participantesLista.includes(usuarioGuardado)) {
+        mostrarUsuarioActual(usuarioGuardado);
+        registrarVisita(usuarioGuardado);
+    } else {
+        mostrarModal();
     }
 })();
 </script>
