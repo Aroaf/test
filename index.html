@@ -397,6 +397,9 @@
     <div class='cabecera'>
       <h1>Pollita Mundial de Futbol 2026</h1>
       <p class='subtitulo'>Detalle completo de apuestas y panel de resultados por grupo.</p>
+        <div id="proximoPartidoInfo" style="margin-top: 12px; padding: 8px 12px; background-color: #e6f4ea; border-left: 4px solid #0f7a46; border-radius: 10px; font-size: 0.9rem;">
+          
+        </div>
         <div id="proximoPartidoContainer" style="margin-top: 12px; padding: 10px; background: rgba(255,255,240,0.8); border-radius: 12px; text-align: center;">
           <div id="proximoPartidoTexto" style="font-weight: bold; font-size: 1rem;">Cargando próximo partido...</div>
           <div id="contadorRegresivo" style="font-size: 1.2rem; font-family: monospace; margin-top: 5px;"></div>
@@ -16992,6 +16995,105 @@
     });
 
     aplicarFiltros();
+    // ========== NUEVA FUNCIÓN PARA PRÓXIMO PARTIDO ==========
+let listaCompletaPartidos = [];
+
+async function cargarProximoPartido() {
+  const div = document.getElementById('proximoPartidoInfo');
+  if (!div) return;
+  
+  try {
+    const separador = urlResultadosOficiales.includes('?') ? '&' : '?';
+    const url = `${urlResultadosOficiales}${separador}t=${Date.now()}`;
+    const respuesta = await fetch(url);
+    if (!respuesta.ok) throw new Error('No se pudo cargar');
+    const csv = await respuesta.text();
+    
+    // Extraer todas las filas (simple, sin modificar funciones existentes)
+    const lineas = csv.split(/\r?\n/).filter(l => l.trim());
+    if (lineas.length < 2) throw new Error('CSV vacío');
+    const headers = lineas[0].split(',').map(h => h.trim().toLowerCase());
+    
+    // Detectar índices importantes
+    const idxId = headers.findIndex(h => h.includes('id_partido') || h === 'id');
+    const idxLocal = headers.findIndex(h => h === 'local');
+    const idxVisita = headers.findIndex(h => h === 'visita');
+    const idxEstado = headers.findIndex(h => h.includes('estado') || h.includes('status'));
+    const idxFecha = headers.findIndex(h => h.includes('fecha') || h.includes('date') || h === 'fecha_min');
+    const idxGolLocal = headers.findIndex(h => h.includes('local.1') || h === 'gol_local');
+    const idxGolVisita = headers.findIndex(h => h.includes('visita.1') || h === 'gol_visita');
+    
+    const partidos = [];
+    for (let i = 1; i < lineas.length; i++) {
+      const cols = parseCSVRow(lineas[i]);
+      if (cols.length < Math.max(idxId, idxLocal, idxVisita) + 1) continue;
+      const id = cols[idxId]?.trim();
+      if (!id) continue;
+      
+      let estado = (cols[idxEstado] || '').trim().toLowerCase();
+      // Si no hay columna estado, asumimos que está terminado solo si tiene resultado
+      if (idxEstado === -1) {
+        const tieneResultado = (cols[idxGolLocal] && cols[idxGolLocal].trim() !== '') && (cols[idxGolVisita] && cols[idxGolVisita].trim() !== '');
+        estado = tieneResultado ? 'finished' : 'notstarted';
+      }
+      
+      const local = cols[idxLocal]?.trim() || '';
+      const visita = cols[idxVisita]?.trim() || '';
+      const fechaRaw = idxFecha >= 0 ? cols[idxFecha] : '';
+      
+      partidos.push({
+        id, local, visita, estado, fechaRaw,
+        golLocal: cols[idxGolLocal]?.trim() || '',
+        golVisita: cols[idxGolVisita]?.trim() || ''
+      });
+    }
+    
+    // Ordenar por algún criterio (asumimos que el CSV viene en orden cronológico o usamos ID)
+    // Buscar el primer partido que NO esté 'finished'
+    const proximo = partidos.find(p => p.estado !== 'finished');
+    if (!proximo) {
+      div.innerHTML = '🏆 Todos los partidos ya finalizaron.';
+      return;
+    }
+    
+    // Calcular tiempo restante si tenemos fecha
+    let tiempoTexto = '';
+    if (proximo.fechaRaw && proximo.estado !== 'live') {
+      const fechaPartido = new Date(proximo.fechaRaw);
+      if (!isNaN(fechaPartido)) {
+        const ahora = new Date();
+        const diffMs = fechaPartido - ahora;
+        if (diffMs > 0) {
+          const horas = Math.floor(diffMs / (1000 * 60 * 60));
+          const minutos = Math.floor((diffMs % (3600000)) / 60000);
+          tiempoTexto = ` · Comienza en ${horas}h ${minutos}m`;
+        } else if (diffMs <= 0 && diffMs > -3600000) {
+          tiempoTexto = ` · ¡En curso!`;
+        }
+      }
+    }
+    
+    // Mostrar resultado si ya está en curso o finalizado
+    let resultado = '';
+    if (proximo.estado === 'live' || (proximo.golLocal !== '' && proximo.golVisita !== '')) {
+      resultado = ` · ${proximo.golLocal || '?'} - ${proximo.golVisita || '?'}`;
+    }
+    
+    div.innerHTML = `⚽ <strong>Próximo partido:</strong> ${proximo.local} vs ${proximo.visita}${resultado}${tiempoTexto}`;
+    
+  } catch (error) {
+    console.error('Error al cargar próximo partido:', error);
+    div.innerHTML = '⚠️ No se pudo cargar la información del próximo partido.';
+  }
+}
+
+// Ejecutar al cargar la página y también después de cargar resultados oficiales (opcional)
+setTimeout(() => {
+  cargarProximoPartido();
+}, 500);
+
+// Si quieres que se actualice cada vez que se presiona "Cargar resultados oficiales",
+// puedes agregar esta línea dentro del evento click de ese botón (opcional, no es necesario)
   </script>
   <section style="text-align: center; margin: 50px 0; padding: 20px; border-top: 2px solid #e2e8f0;">
     <h2 style="color: var(--texto);">¿Tienes algún reclamo?</h2>
