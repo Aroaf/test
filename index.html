@@ -17298,7 +17298,8 @@
     let timerInterval = null;
     let proximoPartidoData = null;
 
-    function parseCSVRowSimple(linea) {
+    // Parseo robusto de CSV (respeta comillas)
+    function parseCSVRow(linea) {
         const resultado = [];
         let actual = '';
         let enComillas = false;
@@ -17322,61 +17323,112 @@
         return resultado;
     }
 
+    // Normalizar nombre de columna (minúsculas, sin acentos, sin espacios)
+    function normalizarColumna(nombre) {
+        return (nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    }
+
+    // Convertir fecha/hora a objeto Date (año 2026)
+    function convertirFechaHora(fechaStr, horaStr) {
+        if (!fechaStr || !horaStr) return null;
+        // Limpiar
+        fechaStr = fechaStr.trim();
+        horaStr = horaStr.trim();
+        
+        let dia, mes, año = 2026; // torneo en 2026
+        // Intentar formato "dd-mmm" (ej. "11-jun")
+        let partesGuion = fechaStr.split('-');
+        if (partesGuion.length === 2) {
+            dia = parseInt(partesGuion[0], 10);
+            const nombreMes = partesGuion[1].toLowerCase();
+            const meses = { ene:0, feb:1, mar:2, abr:3, may:4, jun:5, jul:6, ago:7, sep:8, oct:9, nov:10, dic:11 };
+            mes = meses[nombreMes];
+            if (isNaN(dia) || mes === undefined) return null;
+        } else {
+            // Intentar formato "mm/dd/yyyy" (ej. "06/18/2026")
+            let partesBarra = fechaStr.split('/');
+            if (partesBarra.length === 3) {
+                mes = parseInt(partesBarra[0], 10) - 1;
+                dia = parseInt(partesBarra[1], 10);
+                año = parseInt(partesBarra[2], 10);
+                if (isNaN(dia) || isNaN(mes) || isNaN(año)) return null;
+            } else {
+                return null;
+            }
+        }
+        
+        // Parsear hora "HH:MM"
+        let partesHora = horaStr.split(':');
+        if (partesHora.length !== 2) return null;
+        let hora = parseInt(partesHora[0], 10);
+        let minuto = parseInt(partesHora[1], 10);
+        if (isNaN(hora) || isNaN(minuto)) return null;
+        
+        // Crear fecha local (sin problemas de zona horaria usando Date.UTC)
+        // Para evitar desfases, usamos la construcción con hora local
+        // Nota: new Date(año, mes, día, hora, minuto) interpreta la hora en la zona horaria local del navegador.
+        // Para que el contador sea consistente, asumimos que la hora está en la misma zona que el usuario.
+        // Si quisieras horario fijo (ej. Chile), podrías ajustar.
+        const fecha = new Date(año, mes, dia, hora, minuto, 0);
+        return isNaN(fecha.getTime()) ? null : fecha;
+    }
+
     async function obtenerProximoPartido() {
         try {
             const response = await fetch(URL_CSV + '?t=' + Date.now());
             const csvText = await response.text();
             const lineas = csvText.split(/\r?\n/).filter(l => l.trim() !== '');
             if (lineas.length < 2) return null;
-
-            // Cabecera: asumimos las columnas conocidas
-            // ID, GolesLocal, GolesVisita, Grupo, Orden, EquipoLocal, -, EquipoVisita, Estado, Fecha, Hora
+            
+            // Leer encabezados
+            const headers = parseCSVRow(lineas[0]).map(h => normalizarColumna(h));
+            
+            // Buscar índices de columnas relevantes
+            const idxLocal = headers.findIndex(h => h === 'local' || h === 'equipo local');
+            const idxVisita = headers.findIndex(h => h === 'visita' || h === 'equipo visita');
+            const idxFecha = headers.findIndex(h => h === 'fecha');
+            const idxHora = headers.findIndex(h => h === 'hora' || h === 'hora - inicio');
+            const idxEstado = headers.findIndex(h => h === 'estado');
+            
+            if (idxLocal === -1 || idxVisita === -1 || idxFecha === -1 || idxHora === -1) {
+                console.error('No se encontraron columnas necesarias en el CSV');
+                return null;
+            }
+            
             const partidos = [];
             const ahora = new Date();
-
+            
             for (let i = 1; i < lineas.length; i++) {
-                const cols = parseCSVRowSimple(lineas[i]);
-                if (cols.length < 11) continue;
-                const id = cols[0].trim();
-                const equipoLocal = cols[5].trim();
-                const equipoVisita = cols[7].trim();
-                const fechaStr = cols[9].trim();   // ej: "11-jun"
-                const horaStr = cols[10].trim();   // ej: "15:00"
-                if (!equipoLocal || !equipoVisita || !fechaStr || !horaStr) continue;
-
-                // Construir fecha completa (año 2026)
-                const partesFecha = fechaStr.split('-');
-                if (partesFecha.length !== 2) continue;
-                const dia = parseInt(partesFecha[0], 10);
-                const mesNombre = partesFecha[1].toLowerCase();
-                const meses = { ene:0, feb:1, mar:2, abr:3, may:4, jun:5, jul:6, ago:7, sep:8, oct:9, nov:10, dic:11 };
-                const mes = meses[mesNombre];
-                if (isNaN(dia) || mes === undefined) continue;
-
-                const horaPartes = horaStr.split(':');
-                if (horaPartes.length !== 2) continue;
-                const hora = parseInt(horaPartes[0], 10);
-                const minuto = parseInt(horaPartes[1], 10);
-
-                // Crear objeto Date (año 2026)
-                const fechaPartido = new Date(2026, mes, dia, hora, minuto, 0);
-                if (isNaN(fechaPartido.getTime())) continue;
-
-                // Solo considerar partidos que aún no han comenzado
+                const cols = parseCSVRow(lineas[i]);
+                if (cols.length <= Math.max(idxLocal, idxVisita, idxFecha, idxHora)) continue;
+                
+                const local = cols[idxLocal]?.trim();
+                const visita = cols[idxVisita]?.trim();
+                const fechaStr = cols[idxFecha]?.trim();
+                const horaStr = cols[idxHora]?.trim();
+                const estado = idxEstado !== -1 ? cols[idxEstado]?.trim().toLowerCase() : '';
+                
+                if (!local || !visita || !fechaStr || !horaStr) continue;
+                
+                // Si existe columna Estado, filtrar solo "notstarted" (o vacío). Si no, usamos fecha.
+                if (idxEstado !== -1 && estado !== 'notstarted' && estado !== '') continue;
+                
+                const fechaPartido = convertirFechaHora(fechaStr, horaStr);
+                if (!fechaPartido) continue;
+                
+                // Solo partidos que aún no han comenzado (fecha futura)
                 if (fechaPartido > ahora) {
                     partidos.push({
-                        id,
-                        local: equipoLocal,
-                        visita: equipoVisita,
+                        local,
+                        visita,
                         fecha: fechaPartido,
                         fechaTexto: fechaStr,
                         horaTexto: horaStr
                     });
                 }
             }
-
+            
             if (partidos.length === 0) return null;
-            // Ordenar por fecha más cercana
             partidos.sort((a,b) => a.fecha - b.fecha);
             return partidos[0];
         } catch(e) {
@@ -17390,7 +17442,6 @@
         const ahora = new Date();
         const diferencia = proximoPartidoData.fecha - ahora;
         if (diferencia <= 0) {
-            // El partido ya debería haber comenzado, recargar para buscar el siguiente
             if (timerInterval) clearInterval(timerInterval);
             document.getElementById('contadorRegresivo').innerHTML = '¡Partido en curso!';
             document.getElementById('proximoPartidoTexto').innerHTML = 'Actualizando próximo partido...';
@@ -17422,7 +17473,6 @@
         timerInterval = setInterval(actualizarContador, 1000);
     }
 
-    // Iniciar cuando el DOM esté listo
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', cargarYComenzar);
     } else {
