@@ -17133,225 +17133,159 @@
 </script>
 <script>
 (function() {
-    // --------------------------------------------------
-    // 1. CONFIGURACIÓN: ¡REEMPLAZA ESTO CON TU URL!
-    // --------------------------------------------------
-    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-XI-wqSxdXUhDbRw0mGI_7vA29pfB92PY1KhqsyFFTmydCBQWY39ccQzo_6xWtbVTwg/exec'; // <--- CAMBIA ESTA LÍNEA
-    
-    const STORAGE_KEY = 'usuario_actual_polla';
-    let participanteActual = null;
-    
-    // --------------------------------------------------
-    // 2. FUNCIONES PARA HABLAR CON EL CONTADOR
-    // --------------------------------------------------
-    async function registrarVisita(participante) {
-        if (!participante) return;
-        try {
-            await fetch(SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ participante: participante })
-            });
-            console.log(`✅ Visita registrada para: ${participante}`);
-        } catch (err) {
-            console.error('❌ Error al registrar visita:', err);
-        }
-    }
-    
-    async function obtenerVisitas(participante) {
-        if (!participante) return 0;
-        try {
-            const url = `${SCRIPT_URL}?participante=${encodeURIComponent(participante)}`;
-            const response = await fetch(url);
-            const data = await response.json();
-            return data.visitas || 0;
-        } catch (err) {
-            console.error('Error al obtener visitas:', err);
-            return 0;
-        }
-    }
-    
-    // --------------------------------------------------
-    // 3. OBTENER LA LISTA DE PARTICIPANTES (DESDE TU FILTRO)
-    // --------------------------------------------------
-    let participantesLista = [];
-    const selectOriginal = document.getElementById('filtroParticipante');
-    if (selectOriginal) {
-        participantesLista = Array.from(selectOriginal.options)
-            .map(opt => opt.value)
-            .filter(v => v !== 'todos');
-    } else {
-        // Lista de respaldo (cámbiala si es necesario)
-        participantesLista = [
-            "Ariel", "Camilo", "Carito", "Claudio Padilla", "Daniela", "Diego Toledo",
-            "Felipe Bustos", "Felipe HD", "Grace", "Karen Garrido", "Lando", "Leo",
-            "Marcelitocuerdas", "Marrosquino", "María Isabel", "Miry", "Pablo Meliqueo", "Papasote ALV",
-            "Rocio", "Rodrigo Arriaza", "Sergio Luigi", "Stuart"
-        ];
-    }
-    
-    // --------------------------------------------------
-    // 4. MOSTRAR EL USUARIO Y SUS VISITAS EN LA CABECERA
-    // --------------------------------------------------
-    function mostrarUsuarioActual(nombre) {
-        if (!nombre) return;
-        const existing = document.getElementById('usuarioActualDiv');
-        if (existing) existing.remove();
-        
-        const userDiv = document.createElement('div');
-        userDiv.id = 'usuarioActualDiv';
-        userDiv.style.cssText = 'display:flex; align-items:center; gap:15px; margin-top:8px; font-size:14px; background-color:#e9ecef; padding:5px 15px; border-radius:30px; width:fit-content;';
-        
-        userDiv.innerHTML = `
-            <span>👤 <strong>${escapeHtml(nombre)}</strong></span>
-            <span id="visitasParticipante">👁️ Visitas: <span id="contadorValor">--</span></span>
-            <button id="btnCambiarUsuario" style="background:none; border:none; color:#0047ab; cursor:pointer; font-weight:bold; text-decoration:underline;">Cambiar usuario</button>
-        `;
-        
-        const cabecera = document.querySelector('.cabecera');
-        if (cabecera) cabecera.appendChild(userDiv);
-        
-        obtenerVisitas(nombre).then(visitas => {
-            const spanValor = document.getElementById('contadorValor');
-            if (spanValor) spanValor.textContent = visitas;
-        });
-        
-        document.getElementById('btnCambiarUsuario')?.addEventListener('click', () => {
-            localStorage.removeItem(STORAGE_KEY);
-            location.reload();
-        });
-    }
-    
-    // --------------------------------------------------
-    // 5. MOSTRAR EL MODAL DE SELECCIÓN DE USUARIO
-    // --------------------------------------------------
-    function mostrarModal() {
-        if (document.getElementById('modalLogin')) return;
-        
-        const modal = document.createElement('div');
-        modal.id = 'modalLogin';
-        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; z-index:10000; backdrop-filter:blur(3px);';
-        
-        const modalContent = document.createElement('div');
-        modalContent.style.cssText = 'background:#fff; border-radius:20px; padding:30px; width:90%; max-width:400px; text-align:center; box-shadow:0 20px 35px rgba(0,0,0,0.3);';
-        modalContent.innerHTML = `
-            <h2 style="margin-top:0;">👋 Bienvenido a LuigiBET 2026</h2>
-            <p>Selecciona tu nombre para continuar:</p>
-            <select id="selectUsuario" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ccc; font-size:16px; margin-bottom:20px;">
-                <option value="">-- Elige tu usuario --</option>
-                ${participantesLista.map(p => `<option value="${p.replace(/"/g, '&quot;')}">${p}</option>`).join('')}
-            </select>
-            <button id="btnConfirmarUsuario" style="background:linear-gradient(135deg,#0f7a46,#0c663a); color:white; border:none; padding:12px 20px; border-radius:10px; font-weight:bold; cursor:pointer; width:100%;">Ingresar</button>
-            <p style="font-size:12px; color:#666; margin-top:20px;">* Tus apuestas se mantendrán asociadas a este nombre.</p>
-        `;
-        modal.appendChild(modalContent);
-        document.body.appendChild(modal);
-        
-        const btnConfirmar = document.getElementById('btnConfirmarUsuario');
-        const selectUsuario = document.getElementById('selectUsuario');
-        
-        const seleccionar = async () => {
-            const nombre = selectUsuario.value;
-            if (nombre) {
-                localStorage.setItem(STORAGE_KEY, nombre);
-                await registrarVisita(nombre);
-                modal.remove();
-                mostrarUsuarioActual(nombre);
-            } else {
-                alert('Por favor selecciona un participante.');
-            }
-        };
-        
-        btnConfirmar.addEventListener('click', seleccionar);
-        selectUsuario.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') seleccionar();
-        });
-    }
-    
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m) {
-            if (m === '&') return '&amp;';
-            if (m === '<') return '&lt;';
-            if (m === '>') return '&gt;';
-            return m;
-        });
-    }
-    
-    // --------------------------------------------------
-    // 6. INICIAR AL CARGAR LA PÁGINA
-    // --------------------------------------------------
-    const usuarioGuardado = localStorage.getItem(STORAGE_KEY);
-    if (usuarioGuardado && participantesLista.includes(usuarioGuardado)) {
-        mostrarUsuarioActual(usuarioGuardado);
-        registrarVisita(usuarioGuardado);
-    } else {
-        mostrarModal();
-    }
-})();
-</script>
-<script>
-(function() {
-    // ============================================
-    // CONFIGURACIÓN DEL PRÓXIMO PARTIDO (CÁMBIALO AQUÍ CUANDO SEA NECESARIO)
-    // ============================================
-    const PROXIMO_PARTIDO = {
-        id: 'M_3',                // ID_PARTIDO (opcional, solo referencia)
-        local: 'México',
-        visita: 'Corea del Sur',
-        fechaTexto: '18-jun',     // Formato "dd-mmm"
-        horaTexto: '21:00'        // Formato "HH:MM"
-    };
-    
-    // Año del torneo (2026)
-    const ANIO_TORNEO = 2026;
-    
-    // ============================================
-    // CÁLCULO DE LA FECHA DEL PARTIDO
-    // ============================================
-    function obtenerFechaPartido() {
-        const meses = {
-            ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5,
-            jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11
-        };
-        const partes = PROXIMO_PARTIDO.fechaTexto.split('-');
-        const dia = parseInt(partes[0], 10);
-        const mesNombre = partes[1].toLowerCase();
-        const mes = meses[mesNombre];
-        if (isNaN(dia) || mes === undefined) {
-            console.error('Formato de fecha inválido');
-            return null;
-        }
-        const horaPartes = PROXIMO_PARTIDO.horaTexto.split(':');
-        const hora = parseInt(horaPartes[0], 10);
-        const minuto = parseInt(horaPartes[1], 10);
-        if (isNaN(hora) || isNaN(minuto)) {
-            console.error('Formato de hora inválido');
-            return null;
-        }
-        return new Date(ANIO_TORNEO, mes, dia, hora, minuto, 0);
-    }
-    
-    const fechaPartido = obtenerFechaPartido();
+    const URL_CSV = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS49T7z8TqJVm0fFSXgApVwB3XB-h5S9nrkXr0NGe605vhmo0O_cBZG7_tZep1UTlna0kn1fJSa8Jx0/pub?gid=0&single=true&output=csv';
     let timerInterval = null;
-    
-    // ============================================
-    // ACTUALIZAR CONTADOR
-    // ============================================
-    function actualizarContador() {
-        if (!fechaPartido) return;
-        const ahora = new Date();
-        const diferencia = fechaPartido - ahora;
-        
-        if (diferencia <= 0) {
-            if (timerInterval) clearInterval(timerInterval);
-            document.getElementById('contadorRegresivo').innerHTML = '¡Partido en curso!';
-            document.getElementById('proximoPartidoTexto').innerHTML = '⚽ El partido ya comenzó.';
-            return;
+    let partidoActual = null;
+
+    function parseCSVRow(linea) {
+        const resultado = [];
+        let actual = '';
+        let enComillas = false;
+        for (let i = 0; i < linea.length; i++) {
+            const ch = linea[i];
+            if (ch === '"') {
+                if (enComillas && linea[i+1] === '"') {
+                    actual += '"';
+                    i++;
+                } else {
+                    enComillas = !enComillas;
+                }
+            } else if (ch === ',' && !enComillas) {
+                resultado.push(actual);
+                actual = '';
+            } else {
+                actual += ch;
+            }
         }
-        
-        const segundosTotales = Math.floor(diferencia / 1000);
+        resultado.push(actual);
+        return resultado;
+    }
+
+    function normalizarColumna(nombre) {
+        return (nombre || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim();
+    }
+
+    function convertirFechaHora(fechaStr, horaStr) {
+        if (!fechaStr || !horaStr) return null;
+        fechaStr = fechaStr.trim();
+        horaStr = horaStr.trim();
+        let dia, mes, año = 2026;
+        // Formato "dd-mmm"
+        let partesGuion = fechaStr.split('-');
+        if (partesGuion.length === 2) {
+            dia = parseInt(partesGuion[0], 10);
+            const nombreMes = partesGuion[1].toLowerCase();
+            const meses = { ene:0, feb:1, mar:2, abr:3, may:4, jun:5, jul:6, ago:7, sep:8, oct:9, nov:10, dic:11 };
+            mes = meses[nombreMes];
+            if (isNaN(dia) || mes === undefined) return null;
+        } else {
+            // Formato "mm/dd/yyyy"
+            let partesBarra = fechaStr.split('/');
+            if (partesBarra.length === 3) {
+                mes = parseInt(partesBarra[0], 10) - 1;
+                dia = parseInt(partesBarra[1], 10);
+                año = parseInt(partesBarra[2], 10);
+                if (isNaN(dia) || isNaN(mes) || isNaN(año)) return null;
+            } else {
+                return null;
+            }
+        }
+        let partesHora = horaStr.split(':');
+        if (partesHora.length !== 2) return null;
+        let hora = parseInt(partesHora[0], 10);
+        let minuto = parseInt(partesHora[1], 10);
+        if (isNaN(hora) || isNaN(minuto)) return null;
+        return new Date(año, mes, dia, hora, minuto, 0);
+    }
+
+    async function obtenerPartidoDesdeCSV() {
+        try {
+            const response = await fetch(URL_CSV + '?t=' + Date.now());
+            const csvText = await response.text();
+            const lineas = csvText.split(/\r?\n/).filter(l => l.trim() !== '');
+            if (lineas.length < 2) return null;
+
+            const headers = parseCSVRow(lineas[0]).map(h => normalizarColumna(h));
+            
+            // Buscar columna que contenga "sig_partido" o "siguiente"
+            const idxSigPartido = headers.findIndex(h => h.includes('sig_partido') || h.includes('siguiente'));
+            if (idxSigPartido === -1) {
+                console.error('No se encontró columna de siguiente partido');
+                return null;
+            }
+            
+            // La fila que contiene el ID del siguiente partido (asumimos que es la segunda fila o la que tenga valor)
+            let sigId = null;
+            let filaSig = null;
+            for (let i = 1; i < lineas.length; i++) {
+                const cols = parseCSVRow(lineas[i]);
+                if (cols.length > idxSigPartido && cols[idxSigPartido] && cols[idxSigPartido].trim() !== '') {
+                    sigId = cols[idxSigPartido].trim();
+                    filaSig = cols;
+                    break;
+                }
+            }
+            if (!sigId) {
+                console.error('No se encontró ID del siguiente partido');
+                return null;
+            }
+            
+            // Buscar la fila donde ID_PARTIDO coincida con sigId
+            const idxIdPartido = headers.findIndex(h => h === 'id_partido' || h === 'id');
+            if (idxIdPartido === -1) {
+                console.error('No se encontró columna ID_PARTIDO');
+                return null;
+            }
+            
+            // Buscar índices de local, visita, fecha, hora
+            // Según la estructura, después de "Orden" vienen los nombres de equipos
+            const idxGrupo = headers.findIndex(h => h === 'grupo');
+            const idxOrden = headers.findIndex(h => h === 'orden');
+            const idxFecha = headers.findIndex(h => h === 'fecha');
+            const idxHora = headers.findIndex(h => h === 'hora - inicio' || h === 'hora');
+            
+            if (idxGrupo === -1 || idxOrden === -1 || idxFecha === -1 || idxHora === -1) {
+                console.error('No se encontraron columnas necesarias');
+                return null;
+            }
+            
+            // Local y visita están desplazados respecto a Orden
+            const idxLocalNombre = idxOrden + 1;
+            const idxVisitaNombre = idxOrden + 3;
+            
+            for (let i = 1; i < lineas.length; i++) {
+                const cols = parseCSVRow(lineas[i]);
+                if (cols.length > idxIdPartido && cols[idxIdPartido] && cols[idxIdPartido].trim() === sigId) {
+                    const local = cols[idxLocalNombre]?.trim();
+                    const visita = cols[idxVisitaNombre]?.trim();
+                    const fechaStr = cols[idxFecha]?.trim();
+                    const horaStr = cols[idxHora]?.trim();
+                    if (local && visita && fechaStr && horaStr) {
+                        const fechaPartido = convertirFechaHora(fechaStr, horaStr);
+                        if (fechaPartido) {
+                            return {
+                                id: sigId,
+                                local: local,
+                                visita: visita,
+                                fecha: fechaPartido,
+                                fechaTexto: fechaStr,
+                                horaTexto: horaStr
+                            };
+                        }
+                    }
+                }
+            }
+            return null;
+        } catch(e) {
+            console.error('Error al obtener partido:', e);
+            return null;
+        }
+    }
+
+    function formatearTiempo(milisegundos) {
+        const esFuturo = milisegundos >= 0;
+        const absMs = Math.abs(milisegundos);
+        const segundosTotales = Math.floor(absMs / 1000);
         const dias = Math.floor(segundosTotales / 86400);
         const horas = Math.floor((segundosTotales % 86400) / 3600);
         const minutos = Math.floor((segundosTotales % 3600) / 60);
@@ -17359,29 +17293,40 @@
         let texto = '';
         if (dias > 0) texto += `${dias}d `;
         texto += `${horas.toString().padStart(2,'0')}h ${minutos.toString().padStart(2,'0')}m ${segundos.toString().padStart(2,'0')}s`;
-        document.getElementById('contadorRegresivo').innerHTML = texto;
+        return { texto, esFuturo };
     }
-    
-    // ============================================
-    // INICIALIZAR
-    // ============================================
-    function iniciar() {
-        if (!fechaPartido || isNaN(fechaPartido.getTime())) {
-            document.getElementById('proximoPartidoTexto').innerHTML = '❌ Error: Fecha del partido inválida.';
+
+    function actualizarUI() {
+        if (!partidoActual || !partidoActual.fecha) {
+            document.getElementById('proximoPartidoTexto').innerHTML = 'No hay información del próximo partido';
             document.getElementById('contadorRegresivo').innerHTML = '';
             return;
         }
-        const textoPartido = `⚽ Próximo: ${PROXIMO_PARTIDO.local} vs ${PROXIMO_PARTIDO.visita} – ${PROXIMO_PARTIDO.fechaTexto} ${PROXIMO_PARTIDO.horaTexto}`;
+        const ahora = new Date();
+        const diff = partidoActual.fecha - ahora;
+        const { texto, esFuturo } = formatearTiempo(diff);
+        const estado = esFuturo ? `Faltan: ${texto}` : `En juego (transcurrido: ${texto})`;
+        const textoPartido = `⚽ ${partidoActual.local} vs ${partidoActual.visita} – ${partidoActual.fechaTexto} ${partidoActual.horaTexto}`;
         document.getElementById('proximoPartidoTexto').innerHTML = textoPartido;
-        if (timerInterval) clearInterval(timerInterval);
-        actualizarContador();
-        timerInterval = setInterval(actualizarContador, 1000);
+        document.getElementById('contadorRegresivo').innerHTML = estado;
     }
-    
+
+    async function cargarYComenzar() {
+        partidoActual = await obtenerPartidoDesdeCSV();
+        if (!partidoActual) {
+            document.getElementById('proximoPartidoTexto').innerHTML = 'No se pudo determinar el próximo partido.';
+            document.getElementById('contadorRegresivo').innerHTML = '';
+            return;
+        }
+        if (timerInterval) clearInterval(timerInterval);
+        actualizarUI();
+        timerInterval = setInterval(actualizarUI, 1000);
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', iniciar);
+        document.addEventListener('DOMContentLoaded', cargarYComenzar);
     } else {
-        iniciar();
+        cargarYComenzar();
     }
 })();
 </script>
