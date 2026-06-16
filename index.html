@@ -299,7 +299,7 @@
 
   <header class="cabecera">
     <h1>🏆 Mundial de Fútbol 2026</h1>
-    <p class="subtitulo">Fixture en vivo · Datos desde Google Sheets (Hoja 4)</p>
+    <p class="subtitulo">Fixture en vivo · Resultados desde Google Sheets (Hoja 4)</p>
     <div class="accion">
       <button class="btn-recargar" id="btnRecargar">🔄 Recargar datos</button>
     </div>
@@ -311,7 +311,7 @@
     <div id="bracketContainer" class="bracket-grid"></div>
   </section>
 
-  <p class="pie">Datos leídos en tiempo real desde el sheet · <strong>LuigiBET (c)</strong></p>
+  <p class="pie">Datos leídos en tiempo real · <strong>LuigiBET (c)</strong></p>
 </div>
 
 <script>
@@ -357,7 +357,7 @@
     // --------------------------------------------------------------
     // 2. LECTURA DEL GOOGLE SHEET (Hoja 4)
     // --------------------------------------------------------------
-    const GS_URL = "https://docs.google.com/spreadsheets/d/1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM/edit?usp=sharing";
+    const GS_URL = "https://docs.google.com/spreadsheets/d/1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM/gviz/tq?tqx=out:json&sheet=Hoja%204";
 
     function parsearDatosDesdeSheet(raw) {
       try {
@@ -371,7 +371,7 @@
           const row = rows[i];
           // Columna 0 (A) = Local (no se usa)
           // Columna 1 (B) = Clasificados (nombre del equipo)
-          // Columna 2 (C) = Número de la primera ronda (goles o indicador)
+          // Columna 2 (C) = Goles / puntuación de la primera ronda (número)
           // Columna 3 (D) = Ganador de 16avos (nombre)
           // Columna 4 (E) = Ganador de octavos
           // Columna 5 (F) = Ganador de cuartos
@@ -416,7 +416,7 @@
         throw new Error("No se obtuvieron 32 filas válidas");
       } catch (error) {
         console.warn("Error cargando datos del sheet, usando respaldo:", error);
-        // Datos de respaldo según la imagen (simulados)
+        // Datos de respaldo según la imagen (simulados con los números de la columna C)
         const nombres = [
           "México","Corea del Sur","Chequia","Sudáfrica",
           "Canadá","Catar","Suiza","Bosnia H.",
@@ -427,6 +427,7 @@
           "Irán","Bélgica","Nueva Zelanda","Egipto",
           "Arabia Saudita","España","Uruguay","Cabo Verde"
         ];
+        // Simulamos números de la columna C alternando 1 y 2
         return nombres.map((nombre, idx) => ({
           nombre: nombre,
           numR1: (idx % 2 === 0) ? 1 : 2,
@@ -440,13 +441,12 @@
     }
 
     // --------------------------------------------------------------
-    // 3. CONSTRUIR EL BRACKET A PARTIR DE LOS DATOS
+    // 3. CONSTRUIR EL BRACKET CON LOS RESULTADOS DEL SHEET
     // --------------------------------------------------------------
     function construirBracket(datos) {
-      // datos es un array de 32 objetos con: nombre, numR1, ganadorR1, ganadorR2, ganadorR3, ganadorR4, ganadorR5
       const equipos = datos.map(d => d.nombre);
 
-      // Construir conjuntos de ganadores para cada ronda a partir de las columnas D-H
+      // Conjuntos de ganadores de cada ronda (columnas D-H)
       function obtenerGanadores(columna) {
         const set = new Set();
         datos.forEach(d => {
@@ -464,33 +464,37 @@
       const ganadoresR4Set = obtenerGanadores('ganadorR4'); // Columna G
       const ganadoresR5Set = obtenerGanadores('ganadorR5'); // Columna H
 
-      // Primera ronda: 16 partidos (1vs32, 2vs31, ...)
+      // ---------- PRIMERA RONDA (16avos) ----------
       const partidosR1 = [];
       for (let i = 0; i < 16; i++) {
         const idxA = i;
         const idxB = 31 - i;
         const eqA = equipos[idxA];
         const eqB = equipos[idxB];
-        // Determinar ganador: si está en ganadoresR1Set, gana; si no, usar numR1
+        // Goles reales desde la columna C
+        const golesA = datos[idxA].numR1 !== null ? datos[idxA].numR1 : 0;
+        const golesB = datos[idxB].numR1 !== null ? datos[idxB].numR1 : 0;
+
+        // Determinar ganador: primero usando el set de ganadoresR1
         let ganador = null;
         if (ganadoresR1Set.has(eqA)) ganador = eqA;
         else if (ganadoresR1Set.has(eqB)) ganador = eqB;
+        // Si no está en el set, el ganador es el que tiene más goles
         if (!ganador) {
-          const numA = datos[idxA].numR1;
-          const numB = datos[idxB].numR1;
-          ganador = (numA > numB) ? eqA : eqB;
+          ganador = (golesA > golesB) ? eqA : eqB;
         }
+
         partidosR1.push({
           id: `M${i+1}`,
           equipoA: eqA,
           equipoB: eqB,
           ganador: ganador,
-          golesA: ganador === eqA ? 1 : 0,
-          golesB: ganador === eqB ? 1 : 0
+          golesA: golesA,
+          golesB: golesB
         });
       }
 
-      // Octavos: 8 partidos
+      // ---------- OCTAVOS ----------
       const partidosR2 = [];
       for (let i = 0; i < 8; i++) {
         const p1 = partidosR1[i];
@@ -501,6 +505,7 @@
         if (ganadoresR2Set.has(eqA)) ganador = eqA;
         else if (ganadoresR2Set.has(eqB)) ganador = eqB;
         if (!ganador) ganador = eqA; // fallback
+
         partidosR2.push({
           id: `M${16+i+1}`,
           equipoA: eqA,
@@ -511,7 +516,7 @@
         });
       }
 
-      // Cuartos: 4 partidos
+      // ---------- CUARTOS ----------
       const partidosR3 = [];
       for (let i = 0; i < 4; i++) {
         const p1 = partidosR2[i];
@@ -532,7 +537,7 @@
         });
       }
 
-      // Semis: 2 partidos
+      // ---------- SEMIS ----------
       const partidosR4 = [];
       for (let i = 0; i < 2; i++) {
         const p1 = partidosR3[i];
@@ -553,7 +558,7 @@
         });
       }
 
-      // Final
+      // ---------- FINAL ----------
       const p1 = partidosR4[0];
       const p2 = partidosR4[1];
       const eqA = p1.ganador;
@@ -672,9 +677,9 @@
       } catch (error) {
         estadoDiv.textContent = `❌ Error: ${error.message}. Usando datos de respaldo.`;
         console.error(error);
-        // Usar respaldo
+        // Usar respaldo con datos de la imagen
         const respaldo = [
-          { nombre: "México", numR1: 1, ganadorR1: "México", ganadorR2: "Corea del Sur", ganadorR3: "Corea del Sur", ganadorR4: "Corea del Sur", ganadorR5: "Corea del Sur" },
+          { nombre: "México", numR1: 1, ganadorR1: "Corea del Sur", ganadorR2: "Corea del Sur", ganadorR3: "Corea del Sur", ganadorR4: "Corea del Sur", ganadorR5: "Corea del Sur" },
           { nombre: "Corea del Sur", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
           { nombre: "Chequia", numR1: 1, ganadorR1: "Sudáfrica", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
           { nombre: "Sudáfrica", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
