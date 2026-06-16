@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -447,111 +446,35 @@
       // datos es un array de 32 objetos con: nombre, numR1, ganadorR1, ganadorR2, ganadorR3, ganadorR4, ganadorR5
       const equipos = datos.map(d => d.nombre);
 
-      // Obtener ganadores de cada ronda (nombres no vacíos)
-      const ganadoresR1 = datos.map(d => d.ganadorR1).filter(n => n !== '');
-      const ganadoresR2 = datos.map(d => d.ganadorR2).filter(n => n !== '');
-      const ganadoresR3 = datos.map(d => d.ganadorR3).filter(n => n !== '');
-      const ganadoresR4 = datos.map(d => d.ganadorR4).filter(n => n !== '');
-      const ganadoresR5 = datos.map(d => d.ganadorR5).filter(n => n !== '');
+      // Construir conjuntos de ganadores para cada ronda a partir de las columnas D-H
+      function obtenerGanadores(columna) {
+        const set = new Set();
+        datos.forEach(d => {
+          const val = d[columna];
+          if (val && val !== '') {
+            set.add(val);
+          }
+        });
+        return set;
+      }
+
+      const ganadoresR1Set = obtenerGanadores('ganadorR1'); // Columna D
+      const ganadoresR2Set = obtenerGanadores('ganadorR2'); // Columna E
+      const ganadoresR3Set = obtenerGanadores('ganadorR3'); // Columna F
+      const ganadoresR4Set = obtenerGanadores('ganadorR4'); // Columna G
+      const ganadoresR5Set = obtenerGanadores('ganadorR5'); // Columna H
 
       // Primera ronda: 16 partidos (1vs32, 2vs31, ...)
-      const ronda1 = [];
-      for (let i = 0; i < 16; i++) {
-        const idxA = i;
-        const idxB = 31 - i;
-        const eqA = equipos[idxA];
-        const eqB = equipos[idxB];
-        // Determinar ganador usando ganadoresR1 (columna D)
-        // El ganador es el que aparece en ganadoresR1
-        let ganador = null;
-        if (ganadoresR1.includes(eqA)) ganador = eqA;
-        else if (ganadoresR1.includes(eqB)) ganador = eqB;
-        // Si no se encuentra, usar numR1 para decidir
-        if (!ganador) {
-          const numA = datos[idxA].numR1;
-          const numB = datos[idxB].numR1;
-          ganador = (numA > numB) ? eqA : eqB;
-        }
-        ronda1.push({
-          id: `M${i+1}`,
-          equipoA: eqA,
-          equipoB: eqB,
-          ganador: ganador,
-          golesA: ganador === eqA ? 1 : 0,
-          golesB: ganador === eqB ? 1 : 0
-        });
-      }
-
-      // Octavos: 8 partidos, usando ganadoresR2 (columna E)
-      // Los ganadoresR2 están en el orden de la lista original, pero debemos emparejarlos en el orden del bracket.
-      // El bracket: los ganadores de la primera ronda se emparejan: (1vs32) vs (16vs17), (2vs31) vs (15vs18), ...
-      // Pero como tenemos los ganadoresR2, que son 8 nombres, podemos asignarlos directamente a los 8 partidos de octavos.
-      // El orden de los partidos de octavos en el bracket es: el ganador del partido 1 vs el ganador del partido 16, etc.
-      // Pero como solo tenemos los nombres, podemos usar el orden de ganadoresR2 para los partidos de la izquierda y la derecha.
-      // Mitad izquierda: partidos 1-8 de primera ronda -> sus ganadores se emparejan en 4 partidos de octavos.
-      // Mitad derecha: partidos 9-16 -> 4 partidos de octavos.
-      // Los ganadoresR2 son 8 nombres en orden de la lista original. Los primeros 4 son de la izquierda, los siguientes 4 de la derecha.
-      const ganadoresR2Izq = ganadoresR2.slice(0, 4);
-      const ganadoresR2Der = ganadoresR2.slice(4, 8);
-
-      // Para la izquierda, los partidos de octavos son:
-      // (ganador de partido 1 vs ganador de partido 8) -> (1vs32) vs (8vs25)
-      // (ganador de partido 2 vs ganador de partido 7) -> (2vs31) vs (7vs26)
-      // (ganador de partido 3 vs ganador de partido 6) -> (3vs30) vs (6vs27)
-      // (ganador de partido 4 vs ganador de partido 5) -> (4vs29) vs (5vs28)
-      // Pero no necesitamos los ganadores de primera ronda para los nombres, solo necesitamos los equipos que se enfrentan en octavos.
-      // Los equipos que se enfrentan en octavos son los ganadores de los partidos correspondientes de primera ronda.
-      // Para simplificar, podemos usar los nombres de ganadoresR2Izq en el orden en que aparecen, y asignarlos a los partidos de octavos de la izquierda.
-      // Lo mismo para la derecha.
-      const ronda2 = [];
-      // Izquierda: 4 partidos
-      for (let i = 0; i < 4; i++) {
-        // Los equipos son los ganadores de los partidos de primera ronda que corresponden.
-        // Pero como tenemos los nombres de ganadoresR2Izq, podemos usarlos directamente.
-        const eqA = ganadoresR2Izq[i] || 'Sin definir';
-        // Para el segundo equipo, necesitamos el oponente del bracket. En el bracket simétrico, el oponente está en la otra mitad.
-        // Pero como estamos construyendo solo los partidos de octavos, y los ganadoresR2Izq nos dan los 4 ganadores de la izquierda,
-        // podemos emparejarlos en el orden del bracket: (1vs32) vs (8vs25) -> el primer ganador de la izquierda se enfrenta al cuarto? No.
-        // En realidad, el orden de los partidos de octavos en la izquierda es:
-        // Partido 1: ganador de (1vs32) vs ganador de (8vs25)
-        // Partido 2: ganador de (2vs31) vs ganador de (7vs26)
-        // Partido 3: ganador de (3vs30) vs ganador de (6vs27)
-        // Partido 4: ganador de (4vs29) vs ganador de (5vs28)
-        // Entonces, para la izquierda, los emparejamientos son: (1vs32) vs (8vs25), etc.
-        // Pero los ganadoresR2Izq son los ganadores de esos partidos, pero no sabemos en qué orden.
-        // Sin embargo, la columna E (ganadoresR2) contiene los nombres en el orden de la lista original.
-        // El orden de la lista original es el orden de los equipos. Así que el primer nombre en ganadoresR2Izq es el ganador del partido que involucra al primer equipo de la lista que ganó su partido.
-        // Para simplificar, voy a usar un enfoque diferente: construir los partidos de octavos usando los ganadores de la primera ronda y emparejarlos según el bracket estándar.
-        // Pero como tenemos los ganadoresR2, podemos simplemente usarlos como los ganadores de octavos en el orden del bracket.
-        // Para el orden del bracket, asumimos que el orden de ganadoresR2 es el orden de los partidos de octavos.
-        // Entonces, los primeros 4 son los partidos de la izquierda, los siguientes 4 los de la derecha.
-        // Para cada partido, el ganador es el nombre correspondiente.
-        // El oponente será el otro nombre del mismo partido (pero no lo tenemos). Para mostrar el partido, podemos mostrar el ganador vs el otro ganador.
-        // Pero necesitamos dos equipos por partido. Como no tenemos los oponentes, podemos usar el nombre del ganador como equipoA y el siguiente ganador como equipoB? No.
-        // En un bracket, los partidos de octavos enfrentan a dos ganadores de primera ronda. Como tenemos los nombres de los ganadores de octavos (que son los ganadores de esos partidos), podemos usarlos como el equipo que ganó el partido, pero necesitamos saber quién fue el oponente.
-        // Para simplificar, voy a construir los partidos de octavos usando los ganadores de la primera ronda y emparejarlos según el bracket estándar, y luego asignar el ganador de octavos como el ganador del partido.
-        // Esto es más robusto.
-      }
-
-      // Mejor enfoque: reconstruir todo el bracket usando los ganadores de cada ronda.
-      // Para la primera ronda, tenemos los ganadoresR1 (16 nombres) en el orden de la lista original.
-      // Los partidos de primera ronda son 1vs32, 2vs31, ...
-      // Podemos obtener los ganadores de cada partido de primera ronda directamente de ganadoresR1.
-      // Para octavos, los partidos son: (1vs32) vs (16vs17), (2vs31) vs (15vs18), etc.
-      // Los ganadores de octavos son ganadoresR2 (8 nombres).
-      // Podemos asignar cada ganador de octavos al partido correspondiente.
-      // Para cuartos, similar.
-
-      // Construir lista de partidos de primera ronda con sus ganadores
       const partidosR1 = [];
       for (let i = 0; i < 16; i++) {
         const idxA = i;
         const idxB = 31 - i;
         const eqA = equipos[idxA];
         const eqB = equipos[idxB];
+        // Determinar ganador: si está en ganadoresR1Set, gana; si no, usar numR1
         let ganador = null;
-        if (ganadoresR1.includes(eqA)) ganador = eqA;
-        else if (ganadoresR1.includes(eqB)) ganador = eqB;
+        if (ganadoresR1Set.has(eqA)) ganador = eqA;
+        else if (ganadoresR1Set.has(eqB)) ganador = eqB;
         if (!ganador) {
           const numA = datos[idxA].numR1;
           const numB = datos[idxB].numR1;
@@ -568,25 +491,16 @@
       }
 
       // Octavos: 8 partidos
-      // Orden del bracket para octavos: (1vs32) vs (16vs17), (2vs31) vs (15vs18), (3vs30) vs (14vs19), (4vs29) vs (13vs20), (5vs28) vs (12vs21), (6vs27) vs (11vs22), (7vs26) vs (10vs23), (8vs25) vs (9vs24)
-      // Los índices de los partidos de primera ronda son 0-15.
-      // El partido de octavos i (0-7) enfrenta al ganador del partido de primera ronda [i] y al ganador del partido [15-i].
-      // Entonces:
       const partidosR2 = [];
       for (let i = 0; i < 8; i++) {
         const p1 = partidosR1[i];
         const p2 = partidosR1[15 - i];
         const eqA = p1.ganador;
         const eqB = p2.ganador;
-        // El ganador de octavos es el que aparece en ganadoresR2 (columna E)
         let ganador = null;
-        if (ganadoresR2.includes(eqA)) ganador = eqA;
-        else if (ganadoresR2.includes(eqB)) ganador = eqB;
-        // Si no se encuentra, usar el orden: el que tenga el número más alto en la columna C? O simplemente el primero.
-        if (!ganador) {
-          // Si no hay ganador definido, usamos eqA como ganador por defecto
-          ganador = eqA;
-        }
+        if (ganadoresR2Set.has(eqA)) ganador = eqA;
+        else if (ganadoresR2Set.has(eqB)) ganador = eqB;
+        if (!ganador) ganador = eqA; // fallback
         partidosR2.push({
           id: `M${16+i+1}`,
           equipoA: eqA,
@@ -605,8 +519,8 @@
         const eqA = p1.ganador;
         const eqB = p2.ganador;
         let ganador = null;
-        if (ganadoresR3.includes(eqA)) ganador = eqA;
-        else if (ganadoresR3.includes(eqB)) ganador = eqB;
+        if (ganadoresR3Set.has(eqA)) ganador = eqA;
+        else if (ganadoresR3Set.has(eqB)) ganador = eqB;
         if (!ganador) ganador = eqA;
         partidosR3.push({
           id: `M${24+i+1}`,
@@ -626,8 +540,8 @@
         const eqA = p1.ganador;
         const eqB = p2.ganador;
         let ganador = null;
-        if (ganadoresR4.includes(eqA)) ganador = eqA;
-        else if (ganadoresR4.includes(eqB)) ganador = eqB;
+        if (ganadoresR4Set.has(eqA)) ganador = eqA;
+        else if (ganadoresR4Set.has(eqB)) ganador = eqB;
         if (!ganador) ganador = eqA;
         partidosR4.push({
           id: `M${28+i+1}`,
@@ -639,14 +553,14 @@
         });
       }
 
-      // Final: 1 partido
+      // Final
       const p1 = partidosR4[0];
       const p2 = partidosR4[1];
       const eqA = p1.ganador;
       const eqB = p2.ganador;
       let ganadorFinal = null;
-      if (ganadoresR5.includes(eqA)) ganadorFinal = eqA;
-      else if (ganadoresR5.includes(eqB)) ganadorFinal = eqB;
+      if (ganadoresR5Set.has(eqA)) ganadorFinal = eqA;
+      else if (ganadoresR5Set.has(eqB)) ganadorFinal = eqB;
       if (!ganadorFinal) ganadorFinal = eqA;
       const partidoFinal = {
         id: 'FINAL',
@@ -749,12 +663,54 @@
       const estadoDiv = document.getElementById('estadoCarga');
       estadoDiv.textContent = 'Cargando datos desde Google Sheets...';
 
-      const datos = await cargarDatosSheet();
-      datosActuales = datos;
-      estadoDiv.textContent = `✅ ${datosActuales.length} equipos cargados.`;
-
-      const bracket = construirBracket(datos);
-      renderBracket(bracket);
+      try {
+        const datos = await cargarDatosSheet();
+        datosActuales = datos;
+        estadoDiv.textContent = `✅ ${datosActuales.length} equipos cargados.`;
+        const bracket = construirBracket(datos);
+        renderBracket(bracket);
+      } catch (error) {
+        estadoDiv.textContent = `❌ Error: ${error.message}. Usando datos de respaldo.`;
+        console.error(error);
+        // Usar respaldo
+        const respaldo = [
+          { nombre: "México", numR1: 1, ganadorR1: "México", ganadorR2: "Corea del Sur", ganadorR3: "Corea del Sur", ganadorR4: "Corea del Sur", ganadorR5: "Corea del Sur" },
+          { nombre: "Corea del Sur", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Chequia", numR1: 1, ganadorR1: "Sudáfrica", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Sudáfrica", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Canadá", numR1: 1, ganadorR1: "Catar", ganadorR2: "Catar", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Catar", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Suiza", numR1: 1, ganadorR1: "Bosnia H.", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Bosnia H.", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Brasil", numR1: 1, ganadorR1: "Haití", ganadorR2: "Haití", ganadorR3: "Haití", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Haití", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Escocia", numR1: 1, ganadorR1: "Marruecos", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Marruecos", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Estados Unidos", numR1: 1, ganadorR1: "Australia", ganadorR2: "Australia", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Australia", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Turquía", numR1: 1, ganadorR1: "Paraguay", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Paraguay", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Alemania", numR1: 1, ganadorR1: "Costa de Marfil", ganadorR2: "Costa de Marfil", ganadorR3: "Costa de Marfil", ganadorR4: "Costa de Marfil", ganadorR5: "" },
+          { nombre: "Costa de Marfil", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Ecuador", numR1: 1, ganadorR1: "Curazao", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Curazao", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Países Bajos", numR1: 1, ganadorR1: "Suecia", ganadorR2: "Suecia", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Suecia", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Túnez", numR1: 1, ganadorR1: "Japón", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Japón", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Irán", numR1: 1, ganadorR1: "Bélgica", ganadorR2: "Bélgica", ganadorR3: "Bélgica", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Bélgica", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Nueva Zelanda", numR1: 1, ganadorR1: "Egipto", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Egipto", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Arabia Saudita", numR1: 1, ganadorR1: "España", ganadorR2: "España", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "España", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Uruguay", numR1: 1, ganadorR1: "Cabo Verde", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
+          { nombre: "Cabo Verde", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" }
+        ];
+        datosActuales = respaldo;
+        const bracket = construirBracket(respaldo);
+        renderBracket(bracket);
+      }
     }
 
     inicializarYRenderizar();
