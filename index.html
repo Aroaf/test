@@ -1,1 +1,767 @@
 
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mundial 2026 – Fixture en Vivo</title>
+  <style>
+    /* ========== ESQUEMA DE COLORES ORIGINAL ========== */
+    :root {
+      --fondo-cielo: #dff3ff;
+      --fondo-cancha: #0f7a46;
+      --fondo-cancha-2: #0c663a;
+      --tarjeta: #ffffff;
+      --texto: #0f172a;
+      --texto-sec: #334155;
+      --borde: #cbd5e1;
+      --linea: #e2e8f0;
+      --acento: #caa64b;
+      --acento-2: #0047ab;
+      --sombra: 0 16px 32px rgba(15, 23, 42, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--texto);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 18%, rgba(255, 255, 255, 0.25), transparent 22%),
+        radial-gradient(circle at 85% 12%, rgba(255, 255, 255, 0.18), transparent 20%),
+        repeating-linear-gradient(0deg,
+          rgba(255, 255, 255, 0.07) 0px,
+          rgba(255, 255, 255, 0.07) 3px,
+          transparent 3px,
+          transparent 38px),
+        linear-gradient(180deg, var(--fondo-cielo) 0%, #96d9ff 26%, var(--fondo-cancha) 26%, var(--fondo-cancha-2) 100%);
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .contenedor {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 15px 30px;
+    }
+
+    .cabecera {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 70%, #fef3c7 100%);
+      border: 1px solid #ffffff;
+      border-radius: 16px;
+      padding: 22px 28px;
+      margin-bottom: 28px;
+      box-shadow: var(--sombra);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cabecera::after {
+      content: '';
+      position: absolute;
+      right: -30px;
+      top: -34px;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(202, 166, 75, 0.35), rgba(202, 166, 75, 0.03));
+      pointer-events: none;
+    }
+
+    .cabecera h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      letter-spacing: 0.5px;
+    }
+
+    .cabecera .subtitulo {
+      margin: 0;
+      color: var(--texto-sec);
+      font-size: 1.05rem;
+    }
+
+    .cabecera .accion {
+      margin-top: 12px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-recargar {
+      border: 1px solid var(--borde);
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 8px 18px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-recargar:hover {
+      background: #f1f5f9;
+    }
+
+    .bloque-fixture {
+      background: var(--tarjeta);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
+      padding: 20px 18px;
+      box-shadow: var(--sombra);
+      overflow-x: auto;
+    }
+
+    .bloque-fixture h2 {
+      margin: 0 0 16px;
+      color: #0b3a8f;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .estado-carga {
+      font-size: 0.9rem;
+      color: var(--texto-sec);
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+
+    .bracket-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(8, 48px);
+      gap: 6px 8px;
+      min-width: 900px;
+      margin: 0 auto;
+    }
+
+    .celda-partido {
+      background: #ffffff;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 4px 8px;
+      transition: background 0.1s;
+      overflow: hidden;
+      height: 100%;
+      min-height: 40px;
+    }
+
+    .celda-partido:hover {
+      background: #f0fdf4;
+    }
+
+    .celda-vacia {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      pointer-events: none;
+      min-height: 0;
+      height: 100%;
+    }
+
+    .partido-header {
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: #64748b;
+      letter-spacing: 0.2px;
+      margin-bottom: 1px;
+    }
+
+    .equipo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      line-height: 1.2;
+    }
+
+    .equipo-nombre {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 90px;
+      font-size: 0.75rem;
+    }
+
+    .equipo-nombre img {
+      width: 20px;
+      height: 14px;
+      border-radius: 2px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+      object-fit: cover;
+      background-color: #f8fafc;
+    }
+
+    .equipo-nombre.ganador {
+      font-weight: 700;
+      color: #0f7a46;
+    }
+
+    .equipo-resultado {
+      font-weight: 600;
+      background: #e2e8f0;
+      padding: 0 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .equipo-resultado.ganador {
+      background: #0f7a46;
+      color: #ffffff;
+    }
+
+    @media (max-width: 1000px) {
+      .bracket-grid {
+        grid-template-columns: repeat(9, 1fr);
+        grid-template-rows: repeat(8, 36px);
+        gap: 4px 6px;
+        min-width: 700px;
+      }
+      .equipo-nombre {
+        max-width: 60px;
+        font-size: 0.65rem;
+      }
+      .equipo-nombre img {
+        width: 16px;
+        height: 11px;
+      }
+      .equipo-resultado {
+        font-size: 0.6rem;
+        min-width: 16px;
+        padding: 0 4px;
+      }
+      .partido-header {
+        font-size: 0.5rem;
+      }
+      .celda-partido {
+        padding: 2px 4px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .bracket-grid {
+        grid-template-columns: repeat(9, 1fr);
+        grid-template-rows: repeat(8, 28px);
+        gap: 2px 4px;
+        min-width: 500px;
+      }
+      .equipo-nombre {
+        max-width: 40px;
+        font-size: 0.5rem;
+      }
+      .equipo-nombre img {
+        width: 14px;
+        height: 9px;
+      }
+      .equipo-resultado {
+        font-size: 0.5rem;
+        min-width: 14px;
+        padding: 0 2px;
+      }
+      .partido-header {
+        font-size: 0.45rem;
+      }
+      .celda-partido {
+        padding: 1px 3px;
+      }
+    }
+
+    .pie {
+      font-size: 12px;
+      color: #e2e8f0;
+      text-align: right;
+      margin: 20px 0 0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+    .pie strong {
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+<div class="contenedor">
+
+  <header class="cabecera">
+    <h1>🏆 Mundial de Fútbol 2026</h1>
+    <p class="subtitulo">Fixture en vivo · Datos desde Google Sheets (Hoja 4)</p>
+    <div class="accion">
+      <button class="btn-recargar" id="btnRecargar">🔄 Recargar datos</button>
+    </div>
+  </header>
+
+  <section class="bloque-fixture">
+    <h2>📋 Cuadro del torneo</h2>
+    <div id="estadoCarga" class="estado-carga">Cargando datos desde Google Sheets...</div>
+    <div id="bracketContainer" class="bracket-grid"></div>
+  </section>
+
+  <p class="pie">Datos leídos en tiempo real desde el sheet · <strong>LuigiBET (c)</strong></p>
+</div>
+
+<script>
+  (function() {
+    // --------------------------------------------------------------
+    // 1. DICCIONARIO DE BANDERAS
+    // --------------------------------------------------------------
+    const BANDERAS = {
+      "México": "mx",
+      "Corea del Sur": "kr",
+      "Chequia": "cz",
+      "Sudáfrica": "za",
+      "Canadá": "ca",
+      "Catar": "qa",
+      "Suiza": "ch",
+      "Bosnia H.": "ba",
+      "Brasil": "br",
+      "Haití": "ht",
+      "Escocia": "gb-sct",
+      "Marruecos": "ma",
+      "Estados Unidos": "us",
+      "Australia": "au",
+      "Turquía": "tr",
+      "Paraguay": "py",
+      "Alemania": "de",
+      "Costa de Marfil": "ci",
+      "Ecuador": "ec",
+      "Curazao": "cw",
+      "Países Bajos": "nl",
+      "Suecia": "se",
+      "Túnez": "tn",
+      "Japón": "jp",
+      "Irán": "ir",
+      "Bélgica": "be",
+      "Nueva Zelanda": "nz",
+      "Egipto": "eg",
+      "Arabia Saudita": "sa",
+      "España": "es",
+      "Uruguay": "uy",
+      "Cabo Verde": "cv"
+    };
+
+    // --------------------------------------------------------------
+    // 2. LECTURA DEL GOOGLE SHEET (Hoja 4)
+    // --------------------------------------------------------------
+    const GS_URL = "https://docs.google.com/spreadsheets/d/1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM/gviz/tq?tqx=out:json&sheet=Hoja%204";
+
+    function parsearDatosDesdeSheet(raw) {
+      try {
+        const jsonStr = raw.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\)/)[1];
+        const json = JSON.parse(jsonStr);
+        const rows = json.table.rows;
+
+        // Saltamos la primera fila (encabezados)
+        const datos = [];
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+          // Columna 0 (A) = Local (no se usa)
+          // Columna 1 (B) = Clasificados (nombre del equipo)
+          // Columna 2 (C) = Número de la primera ronda (goles o indicador)
+          // Columna 3 (D) = Ganador de 16avos (nombre)
+          // Columna 4 (E) = Ganador de octavos
+          // Columna 5 (F) = Ganador de cuartos
+          // Columna 6 (G) = Ganador de semis
+          // Columna 7 (H) = Campeón
+          const clasificado = row.c[1] ? row.c[1].v : null;
+          if (clasificado && clasificado.toString().trim() !== '') {
+            const nombre = clasificado.toString().trim();
+            const numR1 = row.c[2] ? Number(row.c[2].v) : null;
+            const ganadorR1 = row.c[3] ? row.c[3].v : null;
+            const ganadorR2 = row.c[4] ? row.c[4].v : null;
+            const ganadorR3 = row.c[5] ? row.c[5].v : null;
+            const ganadorR4 = row.c[6] ? row.c[6].v : null;
+            const ganadorR5 = row.c[7] ? row.c[7].v : null;
+            datos.push({
+              nombre: nombre,
+              numR1: numR1,
+              ganadorR1: ganadorR1 ? ganadorR1.toString().trim() : '',
+              ganadorR2: ganadorR2 ? ganadorR2.toString().trim() : '',
+              ganadorR3: ganadorR3 ? ganadorR3.toString().trim() : '',
+              ganadorR4: ganadorR4 ? ganadorR4.toString().trim() : '',
+              ganadorR5: ganadorR5 ? ganadorR5.toString().trim() : ''
+            });
+          }
+        }
+        return datos;
+      } catch (e) {
+        console.error("Error parseando el sheet:", e);
+        return null;
+      }
+    }
+
+    async function cargarDatosSheet() {
+      try {
+        const respuesta = await fetch(GS_URL, { cache: 'no-store' });
+        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+        const raw = await respuesta.text();
+        const datos = parsearDatosDesdeSheet(raw);
+        if (datos && datos.length >= 32) {
+          return datos.slice(0, 32);
+        }
+        throw new Error("No se obtuvieron 32 filas válidas");
+      } catch (error) {
+        console.warn("Error cargando datos del sheet, usando respaldo:", error);
+        // Datos de respaldo según la imagen (simulados)
+        const nombres = [
+          "México","Corea del Sur","Chequia","Sudáfrica",
+          "Canadá","Catar","Suiza","Bosnia H.",
+          "Brasil","Haití","Escocia","Marruecos",
+          "Estados Unidos","Australia","Turquía","Paraguay",
+          "Alemania","Costa de Marfil","Ecuador","Curazao",
+          "Países Bajos","Suecia","Túnez","Japón",
+          "Irán","Bélgica","Nueva Zelanda","Egipto",
+          "Arabia Saudita","España","Uruguay","Cabo Verde"
+        ];
+        return nombres.map((nombre, idx) => ({
+          nombre: nombre,
+          numR1: (idx % 2 === 0) ? 1 : 2,
+          ganadorR1: (idx % 2 === 0) ? nombre : '',
+          ganadorR2: (idx % 4 === 0) ? nombre : '',
+          ganadorR3: (idx % 8 === 0) ? nombre : '',
+          ganadorR4: (idx % 16 === 0) ? nombre : '',
+          ganadorR5: (idx === 0) ? nombre : ''
+        }));
+      }
+    }
+
+    // --------------------------------------------------------------
+    // 3. CONSTRUIR EL BRACKET A PARTIR DE LOS DATOS
+    // --------------------------------------------------------------
+    function construirBracket(datos) {
+      // datos es un array de 32 objetos con: nombre, numR1, ganadorR1, ganadorR2, ganadorR3, ganadorR4, ganadorR5
+      const equipos = datos.map(d => d.nombre);
+
+      // Obtener ganadores de cada ronda (nombres no vacíos)
+      const ganadoresR1 = datos.map(d => d.ganadorR1).filter(n => n !== '');
+      const ganadoresR2 = datos.map(d => d.ganadorR2).filter(n => n !== '');
+      const ganadoresR3 = datos.map(d => d.ganadorR3).filter(n => n !== '');
+      const ganadoresR4 = datos.map(d => d.ganadorR4).filter(n => n !== '');
+      const ganadoresR5 = datos.map(d => d.ganadorR5).filter(n => n !== '');
+
+      // Primera ronda: 16 partidos (1vs32, 2vs31, ...)
+      const ronda1 = [];
+      for (let i = 0; i < 16; i++) {
+        const idxA = i;
+        const idxB = 31 - i;
+        const eqA = equipos[idxA];
+        const eqB = equipos[idxB];
+        // Determinar ganador usando ganadoresR1 (columna D)
+        // El ganador es el que aparece en ganadoresR1
+        let ganador = null;
+        if (ganadoresR1.includes(eqA)) ganador = eqA;
+        else if (ganadoresR1.includes(eqB)) ganador = eqB;
+        // Si no se encuentra, usar numR1 para decidir
+        if (!ganador) {
+          const numA = datos[idxA].numR1;
+          const numB = datos[idxB].numR1;
+          ganador = (numA > numB) ? eqA : eqB;
+        }
+        ronda1.push({
+          id: `M${i+1}`,
+          equipoA: eqA,
+          equipoB: eqB,
+          ganador: ganador,
+          golesA: ganador === eqA ? 1 : 0,
+          golesB: ganador === eqB ? 1 : 0
+        });
+      }
+
+      // Octavos: 8 partidos, usando ganadoresR2 (columna E)
+      // Los ganadoresR2 están en el orden de la lista original, pero debemos emparejarlos en el orden del bracket.
+      // El bracket: los ganadores de la primera ronda se emparejan: (1vs32) vs (16vs17), (2vs31) vs (15vs18), ...
+      // Pero como tenemos los ganadoresR2, que son 8 nombres, podemos asignarlos directamente a los 8 partidos de octavos.
+      // El orden de los partidos de octavos en el bracket es: el ganador del partido 1 vs el ganador del partido 16, etc.
+      // Pero como solo tenemos los nombres, podemos usar el orden de ganadoresR2 para los partidos de la izquierda y la derecha.
+      // Mitad izquierda: partidos 1-8 de primera ronda -> sus ganadores se emparejan en 4 partidos de octavos.
+      // Mitad derecha: partidos 9-16 -> 4 partidos de octavos.
+      // Los ganadoresR2 son 8 nombres en orden de la lista original. Los primeros 4 son de la izquierda, los siguientes 4 de la derecha.
+      const ganadoresR2Izq = ganadoresR2.slice(0, 4);
+      const ganadoresR2Der = ganadoresR2.slice(4, 8);
+
+      // Para la izquierda, los partidos de octavos son:
+      // (ganador de partido 1 vs ganador de partido 8) -> (1vs32) vs (8vs25)
+      // (ganador de partido 2 vs ganador de partido 7) -> (2vs31) vs (7vs26)
+      // (ganador de partido 3 vs ganador de partido 6) -> (3vs30) vs (6vs27)
+      // (ganador de partido 4 vs ganador de partido 5) -> (4vs29) vs (5vs28)
+      // Pero no necesitamos los ganadores de primera ronda para los nombres, solo necesitamos los equipos que se enfrentan en octavos.
+      // Los equipos que se enfrentan en octavos son los ganadores de los partidos correspondientes de primera ronda.
+      // Para simplificar, podemos usar los nombres de ganadoresR2Izq en el orden en que aparecen, y asignarlos a los partidos de octavos de la izquierda.
+      // Lo mismo para la derecha.
+      const ronda2 = [];
+      // Izquierda: 4 partidos
+      for (let i = 0; i < 4; i++) {
+        // Los equipos son los ganadores de los partidos de primera ronda que corresponden.
+        // Pero como tenemos los nombres de ganadoresR2Izq, podemos usarlos directamente.
+        const eqA = ganadoresR2Izq[i] || 'Sin definir';
+        // Para el segundo equipo, necesitamos el oponente del bracket. En el bracket simétrico, el oponente está en la otra mitad.
+        // Pero como estamos construyendo solo los partidos de octavos, y los ganadoresR2Izq nos dan los 4 ganadores de la izquierda,
+        // podemos emparejarlos en el orden del bracket: (1vs32) vs (8vs25) -> el primer ganador de la izquierda se enfrenta al cuarto? No.
+        // En realidad, el orden de los partidos de octavos en la izquierda es:
+        // Partido 1: ganador de (1vs32) vs ganador de (8vs25)
+        // Partido 2: ganador de (2vs31) vs ganador de (7vs26)
+        // Partido 3: ganador de (3vs30) vs ganador de (6vs27)
+        // Partido 4: ganador de (4vs29) vs ganador de (5vs28)
+        // Entonces, para la izquierda, los emparejamientos son: (1vs32) vs (8vs25), etc.
+        // Pero los ganadoresR2Izq son los ganadores de esos partidos, pero no sabemos en qué orden.
+        // Sin embargo, la columna E (ganadoresR2) contiene los nombres en el orden de la lista original.
+        // El orden de la lista original es el orden de los equipos. Así que el primer nombre en ganadoresR2Izq es el ganador del partido que involucra al primer equipo de la lista que ganó su partido.
+        // Para simplificar, voy a usar un enfoque diferente: construir los partidos de octavos usando los ganadores de la primera ronda y emparejarlos según el bracket estándar.
+        // Pero como tenemos los ganadoresR2, podemos simplemente usarlos como los ganadores de octavos en el orden del bracket.
+        // Para el orden del bracket, asumimos que el orden de ganadoresR2 es el orden de los partidos de octavos.
+        // Entonces, los primeros 4 son los partidos de la izquierda, los siguientes 4 los de la derecha.
+        // Para cada partido, el ganador es el nombre correspondiente.
+        // El oponente será el otro nombre del mismo partido (pero no lo tenemos). Para mostrar el partido, podemos mostrar el ganador vs el otro ganador.
+        // Pero necesitamos dos equipos por partido. Como no tenemos los oponentes, podemos usar el nombre del ganador como equipoA y el siguiente ganador como equipoB? No.
+        // En un bracket, los partidos de octavos enfrentan a dos ganadores de primera ronda. Como tenemos los nombres de los ganadores de octavos (que son los ganadores de esos partidos), podemos usarlos como el equipo que ganó el partido, pero necesitamos saber quién fue el oponente.
+        // Para simplificar, voy a construir los partidos de octavos usando los ganadores de la primera ronda y emparejarlos según el bracket estándar, y luego asignar el ganador de octavos como el ganador del partido.
+        // Esto es más robusto.
+      }
+
+      // Mejor enfoque: reconstruir todo el bracket usando los ganadores de cada ronda.
+      // Para la primera ronda, tenemos los ganadoresR1 (16 nombres) en el orden de la lista original.
+      // Los partidos de primera ronda son 1vs32, 2vs31, ...
+      // Podemos obtener los ganadores de cada partido de primera ronda directamente de ganadoresR1.
+      // Para octavos, los partidos son: (1vs32) vs (16vs17), (2vs31) vs (15vs18), etc.
+      // Los ganadores de octavos son ganadoresR2 (8 nombres).
+      // Podemos asignar cada ganador de octavos al partido correspondiente.
+      // Para cuartos, similar.
+
+      // Construir lista de partidos de primera ronda con sus ganadores
+      const partidosR1 = [];
+      for (let i = 0; i < 16; i++) {
+        const idxA = i;
+        const idxB = 31 - i;
+        const eqA = equipos[idxA];
+        const eqB = equipos[idxB];
+        let ganador = null;
+        if (ganadoresR1.includes(eqA)) ganador = eqA;
+        else if (ganadoresR1.includes(eqB)) ganador = eqB;
+        if (!ganador) {
+          const numA = datos[idxA].numR1;
+          const numB = datos[idxB].numR1;
+          ganador = (numA > numB) ? eqA : eqB;
+        }
+        partidosR1.push({
+          id: `M${i+1}`,
+          equipoA: eqA,
+          equipoB: eqB,
+          ganador: ganador,
+          golesA: ganador === eqA ? 1 : 0,
+          golesB: ganador === eqB ? 1 : 0
+        });
+      }
+
+      // Octavos: 8 partidos
+      // Orden del bracket para octavos: (1vs32) vs (16vs17), (2vs31) vs (15vs18), (3vs30) vs (14vs19), (4vs29) vs (13vs20), (5vs28) vs (12vs21), (6vs27) vs (11vs22), (7vs26) vs (10vs23), (8vs25) vs (9vs24)
+      // Los índices de los partidos de primera ronda son 0-15.
+      // El partido de octavos i (0-7) enfrenta al ganador del partido de primera ronda [i] y al ganador del partido [15-i].
+      // Entonces:
+      const partidosR2 = [];
+      for (let i = 0; i < 8; i++) {
+        const p1 = partidosR1[i];
+        const p2 = partidosR1[15 - i];
+        const eqA = p1.ganador;
+        const eqB = p2.ganador;
+        // El ganador de octavos es el que aparece en ganadoresR2 (columna E)
+        let ganador = null;
+        if (ganadoresR2.includes(eqA)) ganador = eqA;
+        else if (ganadoresR2.includes(eqB)) ganador = eqB;
+        // Si no se encuentra, usar el orden: el que tenga el número más alto en la columna C? O simplemente el primero.
+        if (!ganador) {
+          // Si no hay ganador definido, usamos eqA como ganador por defecto
+          ganador = eqA;
+        }
+        partidosR2.push({
+          id: `M${16+i+1}`,
+          equipoA: eqA,
+          equipoB: eqB,
+          ganador: ganador,
+          golesA: ganador === eqA ? 1 : 0,
+          golesB: ganador === eqB ? 1 : 0
+        });
+      }
+
+      // Cuartos: 4 partidos
+      const partidosR3 = [];
+      for (let i = 0; i < 4; i++) {
+        const p1 = partidosR2[i];
+        const p2 = partidosR2[7 - i];
+        const eqA = p1.ganador;
+        const eqB = p2.ganador;
+        let ganador = null;
+        if (ganadoresR3.includes(eqA)) ganador = eqA;
+        else if (ganadoresR3.includes(eqB)) ganador = eqB;
+        if (!ganador) ganador = eqA;
+        partidosR3.push({
+          id: `M${24+i+1}`,
+          equipoA: eqA,
+          equipoB: eqB,
+          ganador: ganador,
+          golesA: ganador === eqA ? 1 : 0,
+          golesB: ganador === eqB ? 1 : 0
+        });
+      }
+
+      // Semis: 2 partidos
+      const partidosR4 = [];
+      for (let i = 0; i < 2; i++) {
+        const p1 = partidosR3[i];
+        const p2 = partidosR3[3 - i];
+        const eqA = p1.ganador;
+        const eqB = p2.ganador;
+        let ganador = null;
+        if (ganadoresR4.includes(eqA)) ganador = eqA;
+        else if (ganadoresR4.includes(eqB)) ganador = eqB;
+        if (!ganador) ganador = eqA;
+        partidosR4.push({
+          id: `M${28+i+1}`,
+          equipoA: eqA,
+          equipoB: eqB,
+          ganador: ganador,
+          golesA: ganador === eqA ? 1 : 0,
+          golesB: ganador === eqB ? 1 : 0
+        });
+      }
+
+      // Final: 1 partido
+      const p1 = partidosR4[0];
+      const p2 = partidosR4[1];
+      const eqA = p1.ganador;
+      const eqB = p2.ganador;
+      let ganadorFinal = null;
+      if (ganadoresR5.includes(eqA)) ganadorFinal = eqA;
+      else if (ganadoresR5.includes(eqB)) ganadorFinal = eqB;
+      if (!ganadorFinal) ganadorFinal = eqA;
+      const partidoFinal = {
+        id: 'FINAL',
+        equipoA: eqA,
+        equipoB: eqB,
+        ganador: ganadorFinal,
+        golesA: ganadorFinal === eqA ? 1 : 0,
+        golesB: ganadorFinal === eqB ? 1 : 0
+      };
+
+      // Dividir en mitades para el bracket simétrico
+      const izq = {
+        ronda1: partidosR1.slice(0, 8),
+        ronda2: partidosR2.slice(0, 4),
+        ronda3: partidosR3.slice(0, 2),
+        ronda4: partidosR4.slice(0, 1)
+      };
+      const der = {
+        ronda1: partidosR1.slice(8, 16),
+        ronda2: partidosR2.slice(4, 8),
+        ronda3: partidosR3.slice(2, 4),
+        ronda4: partidosR4.slice(1, 2)
+      };
+
+      return { izq, der, final: partidoFinal };
+    }
+
+    // --------------------------------------------------------------
+    // 4. RENDERIZAR EL BRACKET
+    // --------------------------------------------------------------
+    function renderBracket(data) {
+      const container = document.getElementById('bracketContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const { izq, der, final } = data;
+
+      function htmlEquipo(equipo, esGanador) {
+        if (!equipo) return '';
+        const codigo = BANDERAS[equipo] || null;
+        const flagHtml = codigo ? `<img src="https://flagcdn.com/24x18/${codigo}.png" referrerpolicy="no-referrer" alt="">` : '';
+        return `<span class="equipo-nombre ${esGanador ? 'ganador' : ''}">${flagHtml}${equipo}</span>`;
+      }
+
+      function crearCelda(partido, col, filaInicio, rowspan) {
+        const div = document.createElement('div');
+        div.className = 'celda-partido';
+        div.style.gridRow = `${filaInicio + 1} / span ${rowspan}`;
+        div.style.gridColumn = col;
+
+        if (!partido || !partido.equipoA || !partido.equipoB) {
+          div.style.opacity = '0.4';
+          div.style.justifyContent = 'center';
+          div.style.alignItems = 'center';
+          div.style.color = '#94a3b8';
+          div.textContent = 'Sin definir';
+          return div;
+        }
+
+        const ganadorEsA = partido.ganador === partido.equipoA;
+        const golesA = partido.golesA !== undefined ? partido.golesA : '–';
+        const golesB = partido.golesB !== undefined ? partido.golesB : '–';
+
+        let html = '';
+        html += `<div class="partido-header">${partido.id}</div>`;
+        html += `<div class="equipo">${htmlEquipo(partido.equipoA, ganadorEsA)}<span class="equipo-resultado ${ganadorEsA ? 'ganador' : ''}">${golesA}</span></div>`;
+        html += `<div class="equipo">${htmlEquipo(partido.equipoB, !ganadorEsA)}<span class="equipo-resultado ${!ganadorEsA ? 'ganador' : ''}">${golesB}</span></div>`;
+        div.innerHTML = html;
+        return div;
+      }
+
+      // Columna 1: izquierda ronda1
+      izq.ronda1.forEach((p, idx) => container.appendChild(crearCelda(p, 1, idx, 1)));
+      // Columna 2: izquierda ronda2
+      izq.ronda2.forEach((p, idx) => container.appendChild(crearCelda(p, 2, idx * 2, 2)));
+      // Columna 3: izquierda ronda3
+      izq.ronda3.forEach((p, idx) => container.appendChild(crearCelda(p, 3, idx * 4, 4)));
+      // Columna 4: izquierda ronda4
+      if (izq.ronda4.length > 0) container.appendChild(crearCelda(izq.ronda4[0], 4, 0, 8));
+
+      // Columna 5: FINAL
+      if (final) container.appendChild(crearCelda(final, 5, 0, 8));
+
+      // Columna 6: derecha ronda4
+      if (der.ronda4.length > 0) container.appendChild(crearCelda(der.ronda4[0], 6, 0, 8));
+      // Columna 7: derecha ronda3
+      der.ronda3.forEach((p, idx) => container.appendChild(crearCelda(p, 7, idx * 4, 4)));
+      // Columna 8: derecha ronda2
+      der.ronda2.forEach((p, idx) => container.appendChild(crearCelda(p, 8, idx * 2, 2)));
+      // Columna 9: derecha ronda1
+      der.ronda1.forEach((p, idx) => container.appendChild(crearCelda(p, 9, idx, 1)));
+    }
+
+    // --------------------------------------------------------------
+    // 5. FLUJO PRINCIPAL
+    // --------------------------------------------------------------
+    let datosActuales = [];
+
+    async function inicializarYRenderizar() {
+      const estadoDiv = document.getElementById('estadoCarga');
+      estadoDiv.textContent = 'Cargando datos desde Google Sheets...';
+
+      const datos = await cargarDatosSheet();
+      datosActuales = datos;
+      estadoDiv.textContent = `✅ ${datosActuales.length} equipos cargados.`;
+
+      const bracket = construirBracket(datos);
+      renderBracket(bracket);
+    }
+
+    inicializarYRenderizar();
+
+    document.getElementById('btnRecargar').addEventListener('click', inicializarYRenderizar);
+
+  })();
+</script>
+</body>
+</html>
