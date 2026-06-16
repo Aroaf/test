@@ -131,6 +131,16 @@
       background: #f1f5f9;
       border-radius: 8px;
     }
+    .estado-carga.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    .estado-carga.exito {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
 
     .bracket-grid {
       display: grid;
@@ -397,46 +407,27 @@
             });
           }
         }
+        // Validar que hayamos obtenido al menos 32 equipos
+        if (datos.length < 32) {
+          throw new Error(`Solo se encontraron ${datos.length} equipos, se necesitan 32.`);
+        }
         return datos;
       } catch (e) {
         console.error("Error parseando el sheet:", e);
-        return null;
+        throw new Error("Error al interpretar los datos del sheet: " + e.message);
       }
     }
 
     async function cargarDatosSheet() {
       try {
         const respuesta = await fetch(GS_URL, { cache: 'no-store' });
-        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status} - ${respuesta.statusText}`);
         const raw = await respuesta.text();
         const datos = parsearDatosDesdeSheet(raw);
-        if (datos && datos.length >= 32) {
-          return datos.slice(0, 32);
-        }
-        throw new Error("No se obtuvieron 32 filas válidas");
+        return datos.slice(0, 32);
       } catch (error) {
-        console.warn("Error cargando datos del sheet, usando respaldo:", error);
-        // Datos de respaldo según la imagen (simulados con los números de la columna C)
-        const nombres = [
-          "México","Corea del Sur","Chequia","Sudáfrica",
-          "Canadá","Catar","Suiza","Bosnia H.",
-          "Brasil","Haití","Escocia","Marruecos",
-          "Estados Unidos","Australia","Turquía","Paraguay",
-          "Alemania","Costa de Marfil","Ecuador","Curazao",
-          "Países Bajos","Suecia","Túnez","Japón",
-          "Irán","Bélgica","Nueva Zelanda","Egipto",
-          "Arabia Saudita","España","Uruguay","Cabo Verde"
-        ];
-        // Simulamos números de la columna C alternando 1 y 2
-        return nombres.map((nombre, idx) => ({
-          nombre: nombre,
-          numR1: (idx % 2 === 0) ? 1 : 2,
-          ganadorR1: (idx % 2 === 0) ? nombre : '',
-          ganadorR2: (idx % 4 === 0) ? nombre : '',
-          ganadorR3: (idx % 8 === 0) ? nombre : '',
-          ganadorR4: (idx % 16 === 0) ? nombre : '',
-          ganadorR5: (idx === 0) ? nombre : ''
-        }));
+        console.error("Error en cargarDatosSheet:", error);
+        throw new Error("No se pudieron obtener los datos del sheet: " + error.message);
       }
     }
 
@@ -504,7 +495,7 @@
         let ganador = null;
         if (ganadoresR2Set.has(eqA)) ganador = eqA;
         else if (ganadoresR2Set.has(eqB)) ganador = eqB;
-        if (!ganador) ganador = eqA; // fallback
+        if (!ganador) ganador = eqA; // fallback (no debería ocurrir si el sheet está bien)
 
         partidosR2.push({
           id: `M${16+i+1}`,
@@ -660,64 +651,37 @@
     }
 
     // --------------------------------------------------------------
-    // 5. FLUJO PRINCIPAL
+    // 5. FLUJO PRINCIPAL (sin respaldo)
     // --------------------------------------------------------------
-    let datosActuales = [];
-
     async function inicializarYRenderizar() {
       const estadoDiv = document.getElementById('estadoCarga');
-      estadoDiv.textContent = 'Cargando datos desde Google Sheets...';
+      const container = document.getElementById('bracketContainer');
+      estadoDiv.textContent = '⏳ Cargando datos desde Google Sheets...';
+      estadoDiv.className = 'estado-carga';
+      container.innerHTML = ''; // Limpiar fixture anterior
 
       try {
         const datos = await cargarDatosSheet();
-        datosActuales = datos;
-        estadoDiv.textContent = `✅ ${datosActuales.length} equipos cargados.`;
+        // Si llegamos aquí, los datos son válidos
+        estadoDiv.textContent = `✅ ${datos.length} equipos cargados correctamente.`;
+        estadoDiv.className = 'estado-carga exito';
         const bracket = construirBracket(datos);
         renderBracket(bracket);
       } catch (error) {
-        estadoDiv.textContent = `❌ Error: ${error.message}. Usando datos de respaldo.`;
-        console.error(error);
-        // Usar respaldo con datos de la imagen
-        const respaldo = [
-          { nombre: "México", numR1: 1, ganadorR1: "Corea del Sur", ganadorR2: "Corea del Sur", ganadorR3: "Corea del Sur", ganadorR4: "Corea del Sur", ganadorR5: "Corea del Sur" },
-          { nombre: "Corea del Sur", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Chequia", numR1: 1, ganadorR1: "Sudáfrica", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Sudáfrica", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Canadá", numR1: 1, ganadorR1: "Catar", ganadorR2: "Catar", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Catar", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Suiza", numR1: 1, ganadorR1: "Bosnia H.", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Bosnia H.", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Brasil", numR1: 1, ganadorR1: "Haití", ganadorR2: "Haití", ganadorR3: "Haití", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Haití", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Escocia", numR1: 1, ganadorR1: "Marruecos", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Marruecos", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Estados Unidos", numR1: 1, ganadorR1: "Australia", ganadorR2: "Australia", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Australia", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Turquía", numR1: 1, ganadorR1: "Paraguay", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Paraguay", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Alemania", numR1: 1, ganadorR1: "Costa de Marfil", ganadorR2: "Costa de Marfil", ganadorR3: "Costa de Marfil", ganadorR4: "Costa de Marfil", ganadorR5: "" },
-          { nombre: "Costa de Marfil", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Ecuador", numR1: 1, ganadorR1: "Curazao", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Curazao", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Países Bajos", numR1: 1, ganadorR1: "Suecia", ganadorR2: "Suecia", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Suecia", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Túnez", numR1: 1, ganadorR1: "Japón", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Japón", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Irán", numR1: 1, ganadorR1: "Bélgica", ganadorR2: "Bélgica", ganadorR3: "Bélgica", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Bélgica", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Nueva Zelanda", numR1: 1, ganadorR1: "Egipto", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Egipto", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Arabia Saudita", numR1: 1, ganadorR1: "España", ganadorR2: "España", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "España", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Uruguay", numR1: 1, ganadorR1: "Cabo Verde", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" },
-          { nombre: "Cabo Verde", numR1: 2, ganadorR1: "", ganadorR2: "", ganadorR3: "", ganadorR4: "", ganadorR5: "" }
-        ];
-        datosActuales = respaldo;
-        const bracket = construirBracket(respaldo);
-        renderBracket(bracket);
+        // Mostrar error sin generar fixture
+        estadoDiv.textContent = `❌ Error: ${error.message}`;
+        estadoDiv.className = 'estado-carga error';
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #991b1b; background: #fee2e2; border-radius: 8px; border: 1px solid #fecaca;">
+          <p style="font-weight: bold; font-size: 1.1rem;">⚠️ No se pudieron cargar los datos del sheet</p>
+          <p style="margin-top: 8px;">${error.message}</p>
+          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica que la URL del sheet sea correcta y que la Hoja 4 tenga los datos necesarios.</p>
+          <button onclick="location.reload()" style="margin-top: 16px; border: 1px solid #991b1b; background: white; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">🔄 Intentar de nuevo</button>
+        </div>`;
+        console.error("Error en inicializarYRenderizar:", error);
       }
     }
 
+    // Ejecutar
     inicializarYRenderizar();
 
     document.getElementById('btnRecargar').addEventListener('click', inicializarYRenderizar);
