@@ -309,7 +309,7 @@
 
   <header class="cabecera">
     <h1>🏆 Mundial de Fútbol 2026</h1>
-    <p class="subtitulo">Fixture en vivo · Resultados desde Google Sheets</p>
+    <p class="subtitulo">Fixture en vivo · Resultados desde Google Sheets (Hoja 4)</p>
     <div class="accion">
       <button class="btn-recargar" id="btnRecargar">🔄 Recargar datos</button>
     </div>
@@ -365,10 +365,10 @@
     };
 
     // --------------------------------------------------------------
-    // 2. LECTURA DEL GOOGLE SHEET (con ?usp=sharing)
+    // 2. LECTURA DEL GOOGLE SHEET (Hoja 4 con gid)
     // --------------------------------------------------------------
-    // Usamos la URL con ?usp=sharing que permite acceso público
-    const GS_URL = "https://docs.google.com/spreadsheets/d/1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM/gviz/tq?tqx=out:json";
+    // Usamos el gid=1797973312 para apuntar exactamente a la Hoja 4
+    const GS_URL = "https://docs.google.com/spreadsheets/d/1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM/gviz/tq?tqx=out:json&gid=1797973312";
 
     function parsearDatosDesdeSheet(raw) {
       try {
