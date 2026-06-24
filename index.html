@@ -1,1 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mundial 2026 – Fixture en Vivo</title>
+  <style>
+    /* ... el mismo estilo ... */
+  </style>
+</head>
+<body>
+<div class="contenedor">
+  <header class="cabecera">
+    <h1>🏆 Mundial de Fútbol 2026</h1>
+    <p class="subtitulo">Fixture en vivo · Datos desde worldcup26.ir API</p>
+    <div class="accion">
+      <button class="btn-recargar" id="btnRecargar">🔄 Recargar datos</button>
+    </div>
+  </header>
+  <section class="bloque-fixture">
+    <h2>📋 Cuadro del torneo (Eliminación directa)</h2>
+    <div id="estadoCarga" class="estado-carga">Cargando datos desde la API...</div>
+    <div id="bracketContainer" class="bracket"></div>
+  </section>
+  <p class="pie"><strong>Aroa</strong></p>
+  <p class="pie">Powered by <strong>LuigiBET (c)</strong></p>
+</div>
 
+<script>
+  (function() {
+    // --------------------------------------------------------------
+    // 0. TRADUCCIONES DE NOMBRES DE EQUIPOS (INGLÉS → ESPAÑOL)
+    // --------------------------------------------------------------
+    const traducciones = {
+      "Mexico": "México",
+      "South Korea": "Corea del Sur",
+      "Korea Republic": "Corea del Sur",
+      "Czech Republic": "Chequia",
+      "Czechia": "Chequia",
+      "South Africa": "Sudáfrica",
+      "Canada": "Canadá",
+      "Qatar": "Catar",
+      "Switzerland": "Suiza",
+      "Bosnia and Herzegovina": "Bosnia H.",
+      "Bosnia": "Bosnia H.",
+      "Brazil": "Brasil",
+      "Haiti": "Haití",
+      "Scotland": "Escocia",
+      "Morocco": "Marruecos",
+      "United States": "Estados Unidos",
+      "USA": "Estados Unidos",
+      "Australia": "Australia",
+      "Turkey": "Turquía",
+      "Paraguay": "Paraguay",
+      "Germany": "Alemania",
+      "Ivory Coast": "Costa de Marfil",
+      "Côte d'Ivoire": "Costa de Marfil",
+      "Ecuador": "Ecuador",
+      "Curaçao": "Curazao",
+      "Netherlands": "Países Bajos",
+      "Sweden": "Suecia",
+      "Tunisia": "Túnez",
+      "Japan": "Japón",
+      "Iran": "Irán",
+      "Belgium": "Bélgica",
+      "New Zealand": "Nueva Zelanda",
+      "Egypt": "Egipto",
+      "Saudi Arabia": "Arabia Saudita",
+      "Spain": "España",
+      "Uruguay": "Uruguay",
+      "Cape Verde": "Cabo Verde",
+      "Iraq": "Irak",
+      "France": "Francia",
+      "Norway": "Noruega",
+      "Senegal": "Senegal",
+      "Austria": "Austria",
+      "Argentina": "Argentina",
+      "Jordan": "Jordania",
+      "Algeria": "Argelia",
+      "Uzbekistan": "Uzbekistán",
+      "Portugal": "Portugal",
+      "Colombia": "Colombia",
+      "Congo DR": "R.D. del Congo",
+      "Democratic Republic of the Congo": "R.D. del Congo",
+      "Ghana": "Ghana",
+      "England": "Inglaterra",
+      "Panama": "Panamá",
+      "Croatia": "Croacia"
+    };
+
+    // --------------------------------------------------------------
+    // 1. DICCIONARIO DE BANDERAS (IGUAL QUE EN EL SEGUNDO ARCHIVO)
+    // --------------------------------------------------------------
+    const BANDERAS = {
+      "México": "mx",
+      "Sudáfrica": "za",
+      "Corea del Sur": "kr",
+      "Chequia": "cz",
+      "Canadá": "ca",
+      "Bosnia H.": "ba",
+      "Catar": "qa",
+      "Suiza": "ch",
+      "Brasil": "br",
+      "Marruecos": "ma",
+      "Haití": "ht",
+      "Escocia": "gb-sct",
+      "Estados Unidos": "us",
+      "Paraguay": "py",
+      "Australia": "au",
+      "Turquía": "tr",
+      "Alemania": "de",
+      "Curazao": "cw",
+      "Costa de Marfil": "ci",
+      "Ecuador": "ec",
+      "Países Bajos": "nl",
+      "Japón": "jp",
+      "Suecia": "se",
+      "Túnez": "tn",
+      "Irán": "ir",
+      "Nueva Zelanda": "nz",
+      "Bélgica": "be",
+      "Egipto": "eg",
+      "Arabia Saudita": "sa",
+      "Uruguay": "uy",
+      "España": "es",
+      "Cabo Verde": "cv",
+      "Irak": "iq",
+      "Noruega": "no",
+      "Francia": "fr",
+      "Senegal": "sn",
+      "Austria": "at",
+      "Jordania": "jo",
+      "Argentina": "ar",
+      "Argelia": "dz",
+      "Uzbekistán": "uz",
+      "Colombia": "co",
+      "Portugal": "pt",
+      "R.D. del Congo": "cd",
+      "Ghana": "gh",
+      "Panamá": "pa",
+      "Inglaterra": "gb-eng",
+      "Croacia": "hr"
+    };
+
+    // --------------------------------------------------------------
+    // 2. FUNCIÓN QUE DEVUELVE HTML DE BANDERA (COMO EN EL SEGUNDO ARCHIVO)
+    // --------------------------------------------------------------
+    function obtenerHtmlConBandera(nombrePais) {
+      if (!nombrePais) return '';
+      const paisLimpio = nombrePais.trim();
+      const codigo = BANDERAS[paisLimpio];
+      if (codigo) {
+        // Usamos el mismo formato que en el segundo archivo: flagcdn.com/16x12/
+        return `<img src="https://flagcdn.com/16x12/${codigo}.png" style="vertical-align: middle; margin-right: 4px; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.2);">`;
+      }
+      return '';
+    }
+
+    // --------------------------------------------------------------
+    // 3. URL DE LA API
+    // --------------------------------------------------------------
+    const API_URL = "https://worldcup26.ir/get/games";
+
+    // --------------------------------------------------------------
+    // 4. OBTENER DATOS DESDE LA API
+    // --------------------------------------------------------------
+    async function obtenerDatosAPI() {
+      try {
+        const respuesta = await fetch(API_URL, {
+          cache: 'no-store',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status} - ${respuesta.statusText}`);
+        const data = await respuesta.json();
+        return data.games || [];
+      } catch (error) {
+        console.error("Error al obtener datos de la API:", error);
+        throw new Error("No se pudieron obtener los datos de la API: " + error.message);
+      }
+    }
+
+    // --------------------------------------------------------------
+    // 5. FILTRAR Y ORGANIZAR PARTIDOS DE ELIMINACIÓN DIRECTA
+    // --------------------------------------------------------------
+    function organizarPartidos(todos) {
+      const tiposKnockout = ['r32', 'r16', 'qf', 'sf', 'final'];
+      const knockouts = todos.filter(p => tiposKnockout.includes(p.type));
+
+      const porTipo = {};
+      knockouts.forEach(p => {
+        if (!porTipo[p.type]) porTipo[p.type] = [];
+        porTipo[p.type].push(p);
+      });
+
+      const ordenTipos = ['r32', 'r16', 'qf', 'sf', 'final'];
+      const resultado = {};
+      ordenTipos.forEach(tipo => {
+        if (porTipo[tipo]) {
+          porTipo[tipo].sort((a, b) => Number(a.id) - Number(b.id));
+          resultado[tipo] = porTipo[tipo];
+        } else {
+          resultado[tipo] = [];
+        }
+      });
+      return resultado;
+    }
+
+    // --------------------------------------------------------------
+    // 6. RENDERIZAR BRACKET (USANDO innerHTML COMO EN EL SEGUNDO ARCHIVO)
+    // --------------------------------------------------------------
+    function renderizarBracket(partidosPorTipo) {
+      const container = document.getElementById('bracketContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const titulos = {
+        'r32': '16avos',
+        'r16': 'Octavos',
+        'qf': 'Cuartos',
+        'sf': 'Semifinales',
+        'final': 'Final'
+      };
+
+      const tipos = ['r32', 'r16', 'qf', 'sf', 'final'];
+
+      tipos.forEach((tipo) => {
+        const partidos = partidosPorTipo[tipo] || [];
+        const columna = document.createElement('div');
+        columna.className = 'ronda';
+
+        const titulo = document.createElement('div');
+        titulo.className = 'ronda-titulo';
+        titulo.textContent = titulos[tipo] || tipo.toUpperCase();
+        columna.appendChild(titulo);
+
+        if (partidos.length === 0) {
+          const vacio = document.createElement('div');
+          vacio.className = 'partido partido-sin-definir';
+          vacio.textContent = 'Sin definir';
+          columna.appendChild(vacio);
+          container.appendChild(columna);
+          return;
+        }
+
+        partidos.forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'partido';
+
+          // Obtener nombres en inglés y traducir a español
+          const localIng = p.home_team_name_en || p.home_team_label || 'TBD';
+          const visitaIng = p.away_team_name_en || p.away_team_label || 'TBD';
+          const local = traducciones[localIng] || localIng;
+          const visita = traducciones[visitaIng] || visitaIng;
+
+          const golesL = (p.home_score !== undefined && p.home_score !== null && p.home_score !== '') ? p.home_score : '–';
+          const golesV = (p.away_score !== undefined && p.away_score !== null && p.away_score !== '') ? p.away_score : '–';
+
+          let ganador = null;
+          if (p.finished === 'TRUE' || p.finished === true) {
+            const numL = Number(golesL);
+            const numV = Number(golesV);
+            if (!isNaN(numL) && !isNaN(numV) && numL !== numV) {
+              ganador = numL > numV ? 'local' : 'visita';
+            }
+          }
+
+          const esGanadorLocal = ganador === 'local';
+          const esGanadorVisita = ganador === 'visita';
+
+          const header = document.createElement('div');
+          header.className = 'partido-header';
+          header.textContent = `M${p.id}`;
+          div.appendChild(header);
+
+          // ----- EQUIPO LOCAL (usando innerHTML para la bandera) -----
+          const eqLocal = document.createElement('div');
+          eqLocal.className = 'equipo';
+          const nombreLocal = document.createElement('span');
+          nombreLocal.className = `equipo-nombre ${esGanadorLocal ? 'ganador' : ''}`;
+          nombreLocal.innerHTML = obtenerHtmlConBandera(local) + ' ' + local;
+          const resLocal = document.createElement('span');
+          resLocal.className = `equipo-resultado ${esGanadorLocal ? 'ganador' : ''}`;
+          resLocal.textContent = golesL;
+          eqLocal.appendChild(nombreLocal);
+          eqLocal.appendChild(resLocal);
+          div.appendChild(eqLocal);
+
+          // ----- EQUIPO VISITA (usando innerHTML) -----
+          const eqVisita = document.createElement('div');
+          eqVisita.className = 'equipo';
+          const nombreVisita = document.createElement('span');
+          nombreVisita.className = `equipo-nombre ${esGanadorVisita ? 'ganador' : ''}`;
+          nombreVisita.innerHTML = obtenerHtmlConBandera(visita) + ' ' + visita;
+          const resVisita = document.createElement('span');
+          resVisita.className = `equipo-resultado ${esGanadorVisita ? 'ganador' : ''}`;
+          resVisita.textContent = golesV;
+          eqVisita.appendChild(nombreVisita);
+          eqVisita.appendChild(resVisita);
+          div.appendChild(eqVisita);
+
+          columna.appendChild(div);
+        });
+
+        container.appendChild(columna);
+      });
+    }
+
+    // --------------------------------------------------------------
+    // 7. FLUJO PRINCIPAL
+    // --------------------------------------------------------------
+    async function inicializarYRenderizar() {
+      const estadoDiv = document.getElementById('estadoCarga');
+      const container = document.getElementById('bracketContainer');
+      estadoDiv.textContent = '⏳ Cargando datos desde la API...';
+      estadoDiv.className = 'estado-carga';
+      container.innerHTML = '';
+
+      try {
+        const todos = await obtenerDatosAPI();
+        if (!todos || todos.length === 0) {
+          throw new Error('No se recibieron partidos de la API.');
+        }
+
+        const partidosPorTipo = organizarPartidos(todos);
+        const totalKnockouts = Object.values(partidosPorTipo).reduce((sum, arr) => sum + arr.length, 0);
+        estadoDiv.textContent = `✅ ${totalKnockouts} partidos de eliminación directa cargados.`;
+        estadoDiv.className = 'estado-carga exito';
+        renderizarBracket(partidosPorTipo);
+      } catch (error) {
+        estadoDiv.textContent = `❌ Error: ${error.message}`;
+        estadoDiv.className = 'estado-carga error';
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #991b1b; background: #fee2e2; border-radius: 8px; border: 1px solid #fecaca;">
+          <p style="font-weight: bold; font-size: 1.1rem;">⚠️ No se pudieron cargar los datos</p>
+          <p style="margin-top: 8px;">${error.message}</p>
+          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica tu conexión o intenta más tarde.</p>
+          <button onclick="location.reload()" style="margin-top: 16px; border: 1px solid #991b1b; background: white; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">🔄 Intentar de nuevo</button>
+        </div>`;
+        console.error("Error en inicializarYRenderizar:", error);
+      }
+    }
+
+    inicializarYRenderizar();
+    document.getElementById('btnRecargar').addEventListener('click', inicializarYRenderizar);
+
+  })();
+</script>
+</body>
+</html>
