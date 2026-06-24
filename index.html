@@ -1,1 +1,676 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mundial 2026 – Fixture en Vivo</title>
+  <style>
+    /* ========== ESQUEMA DE COLORES ORIGINAL ========== */
+    :root {
+      --fondo-cielo: #dff3ff;
+      --fondo-cancha: #0f7a46;
+      --fondo-cancha-2: #0c663a;
+      --tarjeta: #ffffff;
+      --texto: #0f172a;
+      --texto-sec: #334155;
+      --borde: #cbd5e1;
+      --linea: #e2e8f0;
+      --acento: #caa64b;
+      --acento-2: #0047ab;
+      --sombra: 0 16px 32px rgba(15, 23, 42, 0.12);
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: var(--texto);
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 15% 18%, rgba(255, 255, 255, 0.25), transparent 22%),
+        radial-gradient(circle at 85% 12%, rgba(255, 255, 255, 0.18), transparent 20%),
+        repeating-linear-gradient(0deg,
+          rgba(255, 255, 255, 0.07) 0px,
+          rgba(255, 255, 255, 0.07) 3px,
+          transparent 3px,
+          transparent 38px),
+        linear-gradient(180deg, var(--fondo-cielo) 0%, #96d9ff 26%, var(--fondo-cancha) 26%, var(--fondo-cancha-2) 100%);
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .contenedor {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 15px 30px;
+    }
+
+    .cabecera {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 70%, #fef3c7 100%);
+      border: 1px solid #ffffff;
+      border-radius: 16px;
+      padding: 22px 28px;
+      margin-bottom: 28px;
+      box-shadow: var(--sombra);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cabecera::after {
+      content: '';
+      position: absolute;
+      right: -30px;
+      top: -34px;
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(202, 166, 75, 0.35), rgba(202, 166, 75, 0.03));
+      pointer-events: none;
+    }
+
+    .cabecera h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      letter-spacing: 0.5px;
+    }
+
+    .cabecera .subtitulo {
+      margin: 0;
+      color: var(--texto-sec);
+      font-size: 1.05rem;
+    }
+
+    .cabecera .accion {
+      margin-top: 12px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn-recargar {
+      border: 1px solid var(--borde);
+      background: #ffffff;
+      border-radius: 10px;
+      padding: 8px 18px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .btn-recargar:hover {
+      background: #f1f5f9;
+    }
+
+    .bloque-fixture {
+      background: var(--tarjeta);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 16px;
+      padding: 20px 18px;
+      box-shadow: var(--sombra);
+      overflow-x: auto;
+    }
+
+    .bloque-fixture h2 {
+      margin: 0 0 16px;
+      color: #0b3a8f;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .estado-carga {
+      font-size: 0.9rem;
+      color: var(--texto-sec);
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+    .estado-carga.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    .estado-carga.exito {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .bracket {
+      display: flex;
+      gap: 24px;
+      min-width: 900px;
+      padding: 10px 0;
+      justify-content: flex-start;
+      align-items: stretch;
+    }
+
+    .ronda {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      flex: 0 0 auto;
+      min-width: 160px;
+      gap: 6px;
+    }
+
+    .ronda-titulo {
+      font-weight: 700;
+      font-size: 0.8rem;
+      text-align: center;
+      color: #0b3a8f;
+      background: #e0ecff;
+      padding: 4px 6px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+    }
+
+    .partido {
+      background: #ffffff;
+      border: 1px solid var(--borde);
+      border-radius: 8px;
+      padding: 4px 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      font-size: 0.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: background 0.1s;
+      width: 100%;
+      min-height: 40px;
+    }
+
+    .partido:hover {
+      background: #f0fdf4;
+    }
+
+    .partido-header {
+      font-size: 0.6rem;
+      font-weight: 600;
+      color: #64748b;
+      letter-spacing: 0.2px;
+      margin-bottom: 1px;
+    }
+
+    .equipo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1px 0;
+      line-height: 1.3;
+    }
+
+    .equipo-nombre {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100px;
+      font-size: 0.7rem;
+    }
+
+    /* Estilo para la imagen de bandera (igual que en la tabla de grupos) */
+    .equipo-nombre img {
+      width: 18px;
+      height: 12px;
+      border-radius: 2px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+      flex-shrink: 0;
+      object-fit: cover;
+      background-color: #f8fafc;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    .equipo-nombre.ganador {
+      font-weight: 700;
+      color: #0f7a46;
+    }
+
+    .equipo-resultado {
+      font-weight: 600;
+      background: #e2e8f0;
+      padding: 0 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      min-width: 20px;
+      text-align: center;
+    }
+
+    .equipo-resultado.ganador {
+      background: #0f7a46;
+      color: #ffffff;
+    }
+
+    .partido-sin-definir {
+      opacity: 0.4;
+      justify-content: center;
+      align-items: center;
+      color: #94a3b8;
+      min-height: 40px;
+      display: flex;
+    }
+
+    @media (max-width: 1000px) {
+      .bracket {
+        gap: 12px;
+        min-width: 700px;
+      }
+      .ronda {
+        min-width: 120px;
+      }
+      .equipo-nombre {
+        max-width: 70px;
+        font-size: 0.6rem;
+      }
+      .equipo-nombre img {
+        width: 14px;
+        height: 10px;
+      }
+      .equipo-resultado {
+        font-size: 0.6rem;
+        min-width: 16px;
+        padding: 0 4px;
+      }
+      .partido-header {
+        font-size: 0.5rem;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .bracket {
+        gap: 8px;
+        min-width: 500px;
+      }
+      .ronda {
+        min-width: 90px;
+      }
+      .equipo-nombre {
+        max-width: 50px;
+        font-size: 0.5rem;
+      }
+      .equipo-nombre img {
+        width: 12px;
+        height: 8px;
+      }
+      .equipo-resultado {
+        font-size: 0.5rem;
+        min-width: 14px;
+        padding: 0 2px;
+      }
+      .partido-header {
+        font-size: 0.45rem;
+      }
+      .partido {
+        padding: 2px 4px;
+        min-height: 30px;
+      }
+    }
+
+    .pie {
+      font-size: 12px;
+      color: #e2e8f0;
+      text-align: right;
+      margin: 20px 0 0;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+    }
+    .pie strong {
+      color: #ffffff;
+    }
+  </style>
+</head>
+<body>
+<div class="contenedor">
+
+  <header class="cabecera">
+    <h1>🏆 Mundial de Fútbol 2026</h1>
+    <p class="subtitulo">Fixture en vivo · Datos desde worldcup26.ir API</p>
+    <div class="accion">
+      <button class="btn-recargar" id="btnRecargar">🔄 Recargar datos</button>
+    </div>
+  </header>
+
+  <section class="bloque-fixture">
+    <h2>📋 Cuadro del torneo (Eliminación directa)</h2>
+    <div id="estadoCarga" class="estado-carga">Cargando datos desde la API...</div>
+    <div id="bracketContainer" class="bracket"></div>
+  </section>
+  
+  <p class="pie"><strong>Aroa</strong></p>
+  <p class="pie">Powered by <strong>LuigiBET (c)</strong></p>
+</div>
+
+<script>
+  (function() {
+    // --------------------------------------------------------------
+    // 0. TRADUCCIONES DE NOMBRES DE EQUIPOS (INGLÉS → ESPAÑOL)
+    // --------------------------------------------------------------
+    const traducciones = {
+      "Mexico": "México",
+      "South Korea": "Corea del Sur",
+      "Korea Republic": "Corea del Sur",
+      "Czech Republic": "Chequia",
+      "Czechia": "Chequia",
+      "South Africa": "Sudáfrica",
+      "Canada": "Canadá",
+      "Qatar": "Catar",
+      "Switzerland": "Suiza",
+      "Bosnia and Herzegovina": "Bosnia H.",
+      "Bosnia": "Bosnia H.",
+      "Brazil": "Brasil",
+      "Haiti": "Haití",
+      "Scotland": "Escocia",
+      "Morocco": "Marruecos",
+      "United States": "Estados Unidos",
+      "USA": "Estados Unidos",
+      "Australia": "Australia",
+      "Turkey": "Turquía",
+      "Paraguay": "Paraguay",
+      "Germany": "Alemania",
+      "Ivory Coast": "Costa de Marfil",
+      "Côte d'Ivoire": "Costa de Marfil",
+      "Ecuador": "Ecuador",
+      "Curaçao": "Curazao",
+      "Netherlands": "Países Bajos",
+      "Sweden": "Suecia",
+      "Tunisia": "Túnez",
+      "Japan": "Japón",
+      "Iran": "Irán",
+      "Belgium": "Bélgica",
+      "New Zealand": "Nueva Zelanda",
+      "Egypt": "Egipto",
+      "Saudi Arabia": "Arabia Saudita",
+      "Spain": "España",
+      "Uruguay": "Uruguay",
+      "Cape Verde": "Cabo Verde",
+      "Iraq": "Irak",
+      "France": "Francia",
+      "Norway": "Noruega",
+      "Senegal": "Senegal",
+      "Austria": "Austria",
+      "Argentina": "Argentina",
+      "Jordan": "Jordania",
+      "Algeria": "Argelia",
+      "Uzbekistan": "Uzbekistán",
+      "Portugal": "Portugal",
+      "Colombia": "Colombia",
+      "Congo DR": "R.D. del Congo",
+      "Democratic Republic of the Congo": "R.D. del Congo",
+      "Ghana": "Ghana",
+      "England": "Inglaterra",
+      "Panama": "Panamá",
+      "Croatia": "Croacia"
+    };
+
+    // --------------------------------------------------------------
+    // 1. DICCIONARIO DE BANDERAS (COPIADO EXACTO DEL SEGUNDO ARCHIVO)
+    // --------------------------------------------------------------
+    const BANDERAS = {
+      "México": "mx",
+      "Sudáfrica": "za",
+      "Corea del Sur": "kr",
+      "Chequia": "cz",
+      "Canadá": "ca",
+      "Bosnia H.": "ba",
+      "Catar": "qa",
+      "Suiza": "ch",
+      "Brasil": "br",
+      "Marruecos": "ma",
+      "Haití": "ht",
+      "Escocia": "gb-sct",
+      "Estados Unidos": "us",
+      "Paraguay": "py",
+      "Australia": "au",
+      "Turquía": "tr",
+      "Alemania": "de",
+      "Curazao": "cw",
+      "Costa de Marfil": "ci",
+      "Ecuador": "ec",
+      "Países Bajos": "nl",
+      "Japón": "jp",
+      "Suecia": "se",
+      "Túnez": "tn",
+      "Irán": "ir",
+      "Nueva Zelanda": "nz",
+      "Bélgica": "be",
+      "Egipto": "eg",
+      "Arabia Saudita": "sa",
+      "Uruguay": "uy",
+      "España": "es",
+      "Cabo Verde": "cv",
+      "Irak": "iq",
+      "Noruega": "no",
+      "Francia": "fr",
+      "Senegal": "sn",
+      "Austria": "at",
+      "Jordania": "jo",
+      "Argentina": "ar",
+      "Argelia": "dz",
+      "Uzbekistán": "uz",
+      "Colombia": "co",
+      "Portugal": "pt",
+      "R.D. del Congo": "cd",
+      "Ghana": "gh",
+      "Panamá": "pa",
+      "Inglaterra": "gb-eng",
+      "Croacia": "hr"
+    };
+
+    // --------------------------------------------------------------
+    // 2. FUNCIÓN PARA OBTENER HTML DE BANDERA (IGUAL QUE EN LA TABLA)
+    // --------------------------------------------------------------
+    function obtenerHtmlConBandera(nombrePais) {
+      if (!nombrePais) return '';
+      const paisLimpio = nombrePais.trim();
+      const codigo = BANDERAS[paisLimpio];
+      if (codigo) {
+        // Mismo estilo y tamaño que en la tabla de grupos
+        return `<img src="https://flagcdn.com/16x12/${codigo}.png" style="vertical-align: middle; margin-right: 8px; border-radius: 2px; box-shadow: 0 1px 2px rgba(0,0,0,0.2);" alt="Bandera de ${paisLimpio}" onerror="this.style.display='none'">`;
+      }
+      return '';
+    }
+
+    // --------------------------------------------------------------
+    // 3. URL DE LA API
+    // --------------------------------------------------------------
+    const API_URL = "https://worldcup26.ir/get/games";
+
+    // --------------------------------------------------------------
+    // 4. OBTENER DATOS DESDE LA API
+    // --------------------------------------------------------------
+    async function obtenerDatosAPI() {
+      try {
+        const respuesta = await fetch(API_URL, {
+          cache: 'no-store',
+          headers: { 'Accept': 'application/json' }
+        });
+        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status} - ${respuesta.statusText}`);
+        const data = await respuesta.json();
+        return data.games || [];
+      } catch (error) {
+        console.error("Error al obtener datos de la API:", error);
+        throw new Error("No se pudieron obtener los datos de la API: " + error.message);
+      }
+    }
+
+    // --------------------------------------------------------------
+    // 5. FILTRAR Y ORGANIZAR PARTIDOS DE ELIMINACIÓN DIRECTA
+    // --------------------------------------------------------------
+    function organizarPartidos(todos) {
+      const tiposKnockout = ['r32', 'r16', 'qf', 'sf', 'final'];
+      const knockouts = todos.filter(p => tiposKnockout.includes(p.type));
+
+      const porTipo = {};
+      knockouts.forEach(p => {
+        if (!porTipo[p.type]) porTipo[p.type] = [];
+        porTipo[p.type].push(p);
+      });
+
+      const ordenTipos = ['r32', 'r16', 'qf', 'sf', 'final'];
+      const resultado = {};
+      ordenTipos.forEach(tipo => {
+        if (porTipo[tipo]) {
+          porTipo[tipo].sort((a, b) => Number(a.id) - Number(b.id));
+          resultado[tipo] = porTipo[tipo];
+        } else {
+          resultado[tipo] = [];
+        }
+      });
+      return resultado;
+    }
+
+    // --------------------------------------------------------------
+    // 6. RENDERIZAR BRACKET (CON BANDERAS USANDO innerHTML)
+    // --------------------------------------------------------------
+    function renderizarBracket(partidosPorTipo) {
+      const container = document.getElementById('bracketContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const titulos = {
+        'r32': '16avos',
+        'r16': 'Octavos',
+        'qf': 'Cuartos',
+        'sf': 'Semifinales',
+        'final': 'Final'
+      };
+
+      const tipos = ['r32', 'r16', 'qf', 'sf', 'final'];
+
+      tipos.forEach((tipo) => {
+        const partidos = partidosPorTipo[tipo] || [];
+        const columna = document.createElement('div');
+        columna.className = 'ronda';
+
+        const titulo = document.createElement('div');
+        titulo.className = 'ronda-titulo';
+        titulo.textContent = titulos[tipo] || tipo.toUpperCase();
+        columna.appendChild(titulo);
+
+        if (partidos.length === 0) {
+          const vacio = document.createElement('div');
+          vacio.className = 'partido partido-sin-definir';
+          vacio.textContent = 'Sin definir';
+          columna.appendChild(vacio);
+          container.appendChild(columna);
+          return;
+        }
+
+        partidos.forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'partido';
+
+          // Obtener nombres en inglés y traducir a español
+          const localIng = p.home_team_name_en || p.home_team_label || 'TBD';
+          const visitaIng = p.away_team_name_en || p.away_team_label || 'TBD';
+          const local = traducciones[localIng] || localIng;
+          const visita = traducciones[visitaIng] || visitaIng;
+
+          const golesL = (p.home_score !== undefined && p.home_score !== null && p.home_score !== '') ? p.home_score : '–';
+          const golesV = (p.away_score !== undefined && p.away_score !== null && p.away_score !== '') ? p.away_score : '–';
+
+          let ganador = null;
+          if (p.finished === 'TRUE' || p.finished === true) {
+            const numL = Number(golesL);
+            const numV = Number(golesV);
+            if (!isNaN(numL) && !isNaN(numV) && numL !== numV) {
+              ganador = numL > numV ? 'local' : 'visita';
+            }
+          }
+
+          const esGanadorLocal = ganador === 'local';
+          const esGanadorVisita = ganador === 'visita';
+
+          const header = document.createElement('div');
+          header.className = 'partido-header';
+          header.textContent = `M${p.id}`;
+          div.appendChild(header);
+
+          // ----- EQUIPO LOCAL (con bandera usando innerHTML) -----
+          const eqLocal = document.createElement('div');
+          eqLocal.className = 'equipo';
+          const nombreLocal = document.createElement('span');
+          nombreLocal.className = `equipo-nombre ${esGanadorLocal ? 'ganador' : ''}`;
+          // Usamos innerHTML para insertar la imagen y el texto juntos
+          const banderaHtmlLocal = obtenerHtmlConBandera(local);
+          nombreLocal.innerHTML = `${banderaHtmlLocal} ${local}`;
+          const resLocal = document.createElement('span');
+          resLocal.className = `equipo-resultado ${esGanadorLocal ? 'ganador' : ''}`;
+          resLocal.textContent = golesL;
+          eqLocal.appendChild(nombreLocal);
+          eqLocal.appendChild(resLocal);
+          div.appendChild(eqLocal);
+
+          // ----- EQUIPO VISITA (con bandera usando innerHTML) -----
+          const eqVisita = document.createElement('div');
+          eqVisita.className = 'equipo';
+          const nombreVisita = document.createElement('span');
+          nombreVisita.className = `equipo-nombre ${esGanadorVisita ? 'ganador' : ''}`;
+          const banderaHtmlVisita = obtenerHtmlConBandera(visita);
+          nombreVisita.innerHTML = `${banderaHtmlVisita} ${visita}`;
+          const resVisita = document.createElement('span');
+          resVisita.className = `equipo-resultado ${esGanadorVisita ? 'ganador' : ''}`;
+          resVisita.textContent = golesV;
+          eqVisita.appendChild(nombreVisita);
+          eqVisita.appendChild(resVisita);
+          div.appendChild(eqVisita);
+
+          columna.appendChild(div);
+        });
+
+        container.appendChild(columna);
+      });
+    }
+
+    // --------------------------------------------------------------
+    // 7. FLUJO PRINCIPAL
+    // --------------------------------------------------------------
+    async function inicializarYRenderizar() {
+      const estadoDiv = document.getElementById('estadoCarga');
+      const container = document.getElementById('bracketContainer');
+      estadoDiv.textContent = '⏳ Cargando datos desde la API...';
+      estadoDiv.className = 'estado-carga';
+      container.innerHTML = '';
+
+      try {
+        const todos = await obtenerDatosAPI();
+        if (!todos || todos.length === 0) {
+          throw new Error('No se recibieron partidos de la API.');
+        }
+
+        const partidosPorTipo = organizarPartidos(todos);
+        const totalKnockouts = Object.values(partidosPorTipo).reduce((sum, arr) => sum + arr.length, 0);
+        estadoDiv.textContent = `✅ ${totalKnockouts} partidos de eliminación directa cargados.`;
+        estadoDiv.className = 'estado-carga exito';
+        renderizarBracket(partidosPorTipo);
+      } catch (error) {
+        estadoDiv.textContent = `❌ Error: ${error.message}`;
+        estadoDiv.className = 'estado-carga error';
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #991b1b; background: #fee2e2; border-radius: 8px; border: 1px solid #fecaca;">
+          <p style="font-weight: bold; font-size: 1.1rem;">⚠️ No se pudieron cargar los datos</p>
+          <p style="margin-top: 8px;">${error.message}</p>
+          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica tu conexión o intenta más tarde.</p>
+          <button onclick="location.reload()" style="margin-top: 16px; border: 1px solid #991b1b; background: white; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">🔄 Intentar de nuevo</button>
+        </div>`;
+        console.error("Error en inicializarYRenderizar:", error);
+      }
+    }
+
+    inicializarYRenderizar();
+    document.getElementById('btnRecargar').addEventListener('click', inicializarYRenderizar);
+
+  })();
+</script>
+</body>
+</html>
