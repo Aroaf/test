@@ -220,7 +220,15 @@
       font-size: 0.7rem;
     }
 
-    /* Eliminamos estilos para img porque usamos emojis */
+    .equipo-nombre img {
+      width: 18px;
+      height: 12px;
+      border-radius: 2px;
+      object-fit: cover;
+      background-color: #f8fafc;
+      flex-shrink: 0;
+    }
+
     .equipo-nombre.ganador {
       font-weight: 700;
       color: #0f7a46;
@@ -262,6 +270,10 @@
         max-width: 70px;
         font-size: 0.6rem;
       }
+      .equipo-nombre img {
+        width: 14px;
+        height: 10px;
+      }
       .equipo-resultado {
         font-size: 0.6rem;
         min-width: 16px;
@@ -283,6 +295,10 @@
       .equipo-nombre {
         max-width: 50px;
         font-size: 0.5rem;
+      }
+      .equipo-nombre img {
+        width: 12px;
+        height: 8px;
       }
       .equipo-resultado {
         font-size: 0.5rem;
@@ -407,7 +423,7 @@
       "Bosnia H.": "ba",
       "Brasil": "br",
       "Haití": "ht",
-      "Escocia": "gb",        // Reino Unido (no hay bandera específica para Escocia)
+      "Escocia": "gb",
       "Marruecos": "ma",
       "Estados Unidos": "us",
       "Australia": "au",
@@ -442,29 +458,18 @@
       "Colombia": "co",
       "R.D. del Congo": "cd",
       "Ghana": "gh",
-      "Inglaterra": "gb",      // Reino Unido
+      "Inglaterra": "gb",
       "Panamá": "pa",
       "Croacia": "hr"
     };
 
     // --------------------------------------------------------------
-    // 2. FUNCIÓN PARA OBTENER EL EMOJI DE BANDERA DESDE CÓDIGO ISO
-    // --------------------------------------------------------------
-    function getFlagEmoji(countryCode) {
-      if (!countryCode) return '';
-      const code = countryCode.toUpperCase();
-      // Asegurar que sea de 2 letras
-      if (code.length !== 2) return '';
-      return code.replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt(0)));
-    }
-
-    // --------------------------------------------------------------
-    // 3. URL DE LA API
+    // 2. URL DE LA API
     // --------------------------------------------------------------
     const API_URL = "https://worldcup26.ir/get/games";
 
     // --------------------------------------------------------------
-    // 4. OBTENER DATOS DESDE LA API
+    // 3. OBTENER DATOS DESDE LA API
     // --------------------------------------------------------------
     async function obtenerDatosAPI() {
       try {
@@ -482,7 +487,7 @@
     }
 
     // --------------------------------------------------------------
-    // 5. FILTRAR Y ORGANIZAR PARTIDOS DE ELIMINACIÓN DIRECTA
+    // 4. FILTRAR Y ORGANIZAR PARTIDOS DE ELIMINACIÓN DIRECTA
     // --------------------------------------------------------------
     function organizarPartidos(todos) {
       const tiposKnockout = ['r32', 'r16', 'qf', 'sf', 'final'];
@@ -508,7 +513,7 @@
     }
 
     // --------------------------------------------------------------
-    // 6. RENDERIZAR BRACKET TRADICIONAL (IZQUIERDA → DERECHA)
+    // 5. RENDERIZAR BRACKET CON BANDERAS COMO IMÁGENES
     // --------------------------------------------------------------
     function renderizarBracket(partidosPorTipo) {
       const container = document.getElementById('bracketContainer');
@@ -574,14 +579,22 @@
           header.textContent = `M${p.id}`;
           div.appendChild(header);
 
-          // Local con emoji de bandera
+          // ----- EQUIPO LOCAL (con bandera) -----
           const eqLocal = document.createElement('div');
           eqLocal.className = 'equipo';
           const nombreLocal = document.createElement('span');
           nombreLocal.className = `equipo-nombre ${esGanadorLocal ? 'ganador' : ''}`;
+          // Creamos la bandera como imagen
           const codigoLocal = BANDERAS[local] || null;
-          const flagLocal = codigoLocal ? getFlagEmoji(codigoLocal) : '';
-          nombreLocal.textContent = `${flagLocal} ${local}`; // Usamos textContent para evitar inyección
+          let flagHtmlLocal = '';
+          if (codigoLocal) {
+            flagHtmlLocal = `<img src="https://flagcdn.com/18x12/${codigoLocal}.png" 
+                                 referrerpolicy="no-referrer" 
+                                 loading="lazy" 
+                                 alt="Bandera de ${local}"
+                                 onerror="this.style.display='none'">`;
+          }
+          nombreLocal.innerHTML = `${flagHtmlLocal} ${local}`;
           const resLocal = document.createElement('span');
           resLocal.className = `equipo-resultado ${esGanadorLocal ? 'ganador' : ''}`;
           resLocal.textContent = golesL;
@@ -589,14 +602,21 @@
           eqLocal.appendChild(resLocal);
           div.appendChild(eqLocal);
 
-          // Visita con emoji de bandera
+          // ----- EQUIPO VISITA (con bandera) -----
           const eqVisita = document.createElement('div');
           eqVisita.className = 'equipo';
           const nombreVisita = document.createElement('span');
           nombreVisita.className = `equipo-nombre ${esGanadorVisita ? 'ganador' : ''}`;
           const codigoVisita = BANDERAS[visita] || null;
-          const flagVisita = codigoVisita ? getFlagEmoji(codigoVisita) : '';
-          nombreVisita.textContent = `${flagVisita} ${visita}`;
+          let flagHtmlVisita = '';
+          if (codigoVisita) {
+            flagHtmlVisita = `<img src="https://flagcdn.com/18x12/${codigoVisita}.png" 
+                                   referrerpolicy="no-referrer" 
+                                   loading="lazy" 
+                                   alt="Bandera de ${visita}"
+                                   onerror="this.style.display='none'">`;
+          }
+          nombreVisita.innerHTML = `${flagHtmlVisita} ${visita}`;
           const resVisita = document.createElement('span');
           resVisita.className = `equipo-resultado ${esGanadorVisita ? 'ganador' : ''}`;
           resVisita.textContent = golesV;
@@ -612,7 +632,7 @@
     }
 
     // --------------------------------------------------------------
-    // 7. FLUJO PRINCIPAL
+    // 6. FLUJO PRINCIPAL
     // --------------------------------------------------------------
     async function inicializarYRenderizar() {
       const estadoDiv = document.getElementById('estadoCarga');
