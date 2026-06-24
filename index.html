@@ -220,16 +220,7 @@
       font-size: 0.7rem;
     }
 
-    .equipo-nombre img {
-      width: 18px;
-      height: 12px;
-      border-radius: 2px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-      flex-shrink: 0;
-      object-fit: cover;
-      background-color: #f8fafc;
-    }
-
+    /* Eliminamos estilos para img porque usamos emojis */
     .equipo-nombre.ganador {
       font-weight: 700;
       color: #0f7a46;
@@ -271,10 +262,6 @@
         max-width: 70px;
         font-size: 0.6rem;
       }
-      .equipo-nombre img {
-        width: 14px;
-        height: 10px;
-      }
       .equipo-resultado {
         font-size: 0.6rem;
         min-width: 16px;
@@ -296,10 +283,6 @@
       .equipo-nombre {
         max-width: 50px;
         font-size: 0.5rem;
-      }
-      .equipo-nombre img {
-        width: 12px;
-        height: 8px;
       }
       .equipo-resultado {
         font-size: 0.5rem;
@@ -411,7 +394,7 @@
     };
 
     // --------------------------------------------------------------
-    // 1. DICCIONARIO DE BANDERAS (CLAVES EN ESPAÑOL)
+    // 1. DICCIONARIO DE BANDERAS (CÓDIGOS ISO DE 2 LETRAS)
     // --------------------------------------------------------------
     const BANDERAS = {
       "México": "mx",
@@ -424,7 +407,7 @@
       "Bosnia H.": "ba",
       "Brasil": "br",
       "Haití": "ht",
-      "Escocia": "gb-sct",
+      "Escocia": "gb",        // Reino Unido (no hay bandera específica para Escocia)
       "Marruecos": "ma",
       "Estados Unidos": "us",
       "Australia": "au",
@@ -459,18 +442,29 @@
       "Colombia": "co",
       "R.D. del Congo": "cd",
       "Ghana": "gh",
-      "Inglaterra": "gb-eng",
+      "Inglaterra": "gb",      // Reino Unido
       "Panamá": "pa",
       "Croacia": "hr"
     };
 
     // --------------------------------------------------------------
-    // 2. URL DE LA API
+    // 2. FUNCIÓN PARA OBTENER EL EMOJI DE BANDERA DESDE CÓDIGO ISO
+    // --------------------------------------------------------------
+    function getFlagEmoji(countryCode) {
+      if (!countryCode) return '';
+      const code = countryCode.toUpperCase();
+      // Asegurar que sea de 2 letras
+      if (code.length !== 2) return '';
+      return code.replace(/./g, char => String.fromCodePoint(127397 + char.charCodeAt(0)));
+    }
+
+    // --------------------------------------------------------------
+    // 3. URL DE LA API
     // --------------------------------------------------------------
     const API_URL = "https://worldcup26.ir/get/games";
 
     // --------------------------------------------------------------
-    // 3. OBTENER DATOS DESDE LA API
+    // 4. OBTENER DATOS DESDE LA API
     // --------------------------------------------------------------
     async function obtenerDatosAPI() {
       try {
@@ -488,7 +482,7 @@
     }
 
     // --------------------------------------------------------------
-    // 4. FILTRAR Y ORGANIZAR PARTIDOS DE ELIMINACIÓN DIRECTA
+    // 5. FILTRAR Y ORGANIZAR PARTIDOS DE ELIMINACIÓN DIRECTA
     // --------------------------------------------------------------
     function organizarPartidos(todos) {
       const tiposKnockout = ['r32', 'r16', 'qf', 'sf', 'final'];
@@ -514,7 +508,7 @@
     }
 
     // --------------------------------------------------------------
-    // 5. RENDERIZAR BRACKET TRADICIONAL (IZQUIERDA → DERECHA)
+    // 6. RENDERIZAR BRACKET TRADICIONAL (IZQUIERDA → DERECHA)
     // --------------------------------------------------------------
     function renderizarBracket(partidosPorTipo) {
       const container = document.getElementById('bracketContainer');
@@ -580,14 +574,14 @@
           header.textContent = `M${p.id}`;
           div.appendChild(header);
 
-          // Local
+          // Local con emoji de bandera
           const eqLocal = document.createElement('div');
           eqLocal.className = 'equipo';
           const nombreLocal = document.createElement('span');
           nombreLocal.className = `equipo-nombre ${esGanadorLocal ? 'ganador' : ''}`;
           const codigoLocal = BANDERAS[local] || null;
-          const flagLocal = codigoLocal ? `<img src="https://flagcdn.com/18x12/${codigoLocal}.png" referrerpolicy="no-referrer" alt="">` : '';
-          nombreLocal.innerHTML = `${flagLocal}${local}`;
+          const flagLocal = codigoLocal ? getFlagEmoji(codigoLocal) : '';
+          nombreLocal.textContent = `${flagLocal} ${local}`; // Usamos textContent para evitar inyección
           const resLocal = document.createElement('span');
           resLocal.className = `equipo-resultado ${esGanadorLocal ? 'ganador' : ''}`;
           resLocal.textContent = golesL;
@@ -595,14 +589,14 @@
           eqLocal.appendChild(resLocal);
           div.appendChild(eqLocal);
 
-          // Visita
+          // Visita con emoji de bandera
           const eqVisita = document.createElement('div');
           eqVisita.className = 'equipo';
           const nombreVisita = document.createElement('span');
           nombreVisita.className = `equipo-nombre ${esGanadorVisita ? 'ganador' : ''}`;
           const codigoVisita = BANDERAS[visita] || null;
-          const flagVisita = codigoVisita ? `<img src="https://flagcdn.com/18x12/${codigoVisita}.png" referrerpolicy="no-referrer" alt="">` : '';
-          nombreVisita.innerHTML = `${flagVisita}${visita}`;
+          const flagVisita = codigoVisita ? getFlagEmoji(codigoVisita) : '';
+          nombreVisita.textContent = `${flagVisita} ${visita}`;
           const resVisita = document.createElement('span');
           resVisita.className = `equipo-resultado ${esGanadorVisita ? 'ganador' : ''}`;
           resVisita.textContent = golesV;
@@ -618,7 +612,7 @@
     }
 
     // --------------------------------------------------------------
-    // 6. FLUJO PRINCIPAL
+    // 7. FLUJO PRINCIPAL
     // --------------------------------------------------------------
     async function inicializarYRenderizar() {
       const estadoDiv = document.getElementById('estadoCarga');
