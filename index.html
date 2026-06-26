@@ -488,6 +488,36 @@
       margin-top: 20px;
     }
 
+    /* ===== SECCIÓN RECLAMOS ===== */
+    .seccion-reclamos {
+      text-align: center;
+      margin: 50px 0 30px;
+      padding: 20px;
+      border-top: 2px solid #e2e8f0;
+    }
+    .seccion-reclamos h2 {
+      color: var(--texto);
+      font-size: 1.5rem;
+      margin-bottom: 10px;
+    }
+    .seccion-reclamos p {
+      color: var(--texto-sec);
+      margin-bottom: 20px;
+    }
+    .seccion-reclamos .btn-reclamo {
+      display: inline-block;
+      background-color: var(--acento-2);
+      color: white;
+      padding: 12px 25px;
+      text-decoration: none;
+      border-radius: 6px;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    .seccion-reclamos .btn-reclamo:hover {
+      background-color: #003380;
+    }
+
     .pie {
       font-size: 12px;
       color: #e2e8f0;
@@ -514,6 +544,9 @@
       .usuario-actual {
         font-size: 12px;
         padding: 4px 12px;
+      }
+      .seccion-reclamos h2 {
+        font-size: 1.2rem;
       }
     }
   </style>
@@ -548,6 +581,13 @@
     <h2>🏅 Tabla de Posiciones (Top 11)</h2>
     <div id="estadoCargaTabla" class="estado-carga">Cargando datos desde Google Sheets...</div>
     <div id="tablaContainer"></div>
+  </section>
+
+  <!-- SECCIÓN RECLAMOS (AGREGADA) -->
+  <section class="seccion-reclamos">
+    <h2>¿Tienes algún reclamo?</h2>
+    <p></p>
+    <a href="https://www.fifa.com/es/contact" target="_blank" class="btn-reclamo">Ir</a>
   </section>
 
   <p class="pie"><strong>Aroa</strong></p>
@@ -920,7 +960,7 @@
     }
 
     // ================================================================
-    // 4. FUNCIONES PARA LA TABLA DE POSICIONES (CON FORMATO DE "Resultados por grupo")
+    // 4. FUNCIONES PARA LA TABLA DE POSICIONES
     // ================================================================
     const SHEET_ID = "1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM";
     const SHEET_NAME = "Tabla dinámica 5";
@@ -1076,7 +1116,6 @@
         return;
       }
 
-      // Leyenda (copiada de la segunda web)
       let leyendaHtml = `
         <div class="leyenda-puntajes">
           <span class="leyenda-chip"><span class="leyenda-color" style="background:#39d353;"></span> Clasifica 🏆</span>
@@ -1102,14 +1141,11 @@
       participantes.forEach((p, index) => {
         const pos = index + 1;
         let clasePosicion = '';
-        // Aplicar clases según posición (igual que en la segunda web)
         if (pos <= 6) {
           clasePosicion = 'clasifica';
         } else {
           clasePosicion = 'descalifica';
         }
-        // El último (11) se podría considerar honorífico si quieres, pero lo dejamos como descalifica
-        // para mantener la coherencia.
 
         html += `<tr>
           <td class="posicion-celda ${clasePosicion}">${pos}</td>
