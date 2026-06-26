@@ -393,7 +393,21 @@
     .tabla-posiciones .col-der {
       text-align: right;
     }
-    /* Estilos para el top 3 con colores de medalla */
+    
+    /* ===== NUEVOS ESTILOS PARA CLASIFICADOS Y ELIMINADOS ===== */
+    .tabla-posiciones .fila-clasificado {
+      background: #d4edda;  /* verde claro */
+    }
+    .tabla-posiciones .fila-clasificado td {
+      border-bottom-color: #b7dfb9;
+    }
+    .tabla-posiciones .fila-eliminado {
+      background: #f8d7da;  /* rojo claro */
+    }
+    .tabla-posiciones .fila-eliminado td {
+      border-bottom-color: #f5c6cb;
+    }
+    /* Mantener estilos de medallas por si se usan */
     .tabla-posiciones .fila-oro {
       background: #fef9e7;
     }
@@ -411,6 +425,38 @@
     }
     .tabla-posiciones .fila-bronce td {
       border-bottom-color: #e6b88a;
+    }
+
+    /* ===== LEYENDA ===== */
+    .leyenda {
+      display: flex;
+      gap: 24px;
+      margin: 12px 0 16px 0;
+      padding: 10px 16px;
+      background: #f8fafc;
+      border-radius: 10px;
+      border: 1px solid var(--borde);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .leyenda-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    .leyenda-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .leyenda-color.verde {
+      background: #d4edda;
+    }
+    .leyenda-color.rojo {
+      background: #f8d7da;
     }
 
     /* ===== USUARIO ACTUAL ===== */
@@ -535,6 +581,15 @@
         font-size: 12px;
         padding: 4px 12px;
       }
+      .leyenda {
+        gap: 12px;
+        font-size: 0.8rem;
+        padding: 8px 12px;
+      }
+      .leyenda-color {
+        width: 16px;
+        height: 16px;
+      }
     }
   </style>
 </head>
@@ -567,6 +622,15 @@
   <section id="tabTabla" class="panel-tab">
     <h2>🏅 Tabla de Posiciones (Top 11)</h2>
     <div id="estadoCargaTabla" class="estado-carga">Cargando datos desde Google Sheets...</div>
+    <!-- LEYENDA -->
+    <div class="leyenda">
+      <span class="leyenda-item">
+        <span class="leyenda-color verde"></span> Clasificados (1° al 6°)
+      </span>
+      <span class="leyenda-item">
+        <span class="leyenda-color rojo"></span> No clasifican (7° al 11°)
+      </span>
+    </div>
     <div id="tablaContainer"></div>
   </section>
 
@@ -619,14 +683,9 @@
       });
     }
 
-    // MODIFICADO: Invitado ahora también registra visitas
     async function registrarVisita(participante) {
-      // Si no hay participante, no hacemos nada
       if (!participante) return;
-      
-      // Usamos el nombre tal cual (incluyendo "Invitado")
       const nombreParaRegistro = participante;
-      
       try {
         await fetch(SCRIPT_URL, {
           method: 'POST',
@@ -640,7 +699,6 @@
       }
     }
 
-    // MODIFICADO: Invitado ahora también consulta su contador de visitas
     async function obtenerVisitas(participante) {
       if (!participante) return 0;
       try {
@@ -657,12 +715,8 @@
     function mostrarUsuarioActual(nombre) {
       const container = document.getElementById('usuarioContainer');
       if (!container) return;
-
-      // Eliminar contenido anterior
       container.innerHTML = '';
-
       if (!nombre) return;
-
       const div = document.createElement('div');
       div.className = 'usuario-actual';
       div.innerHTML = `
@@ -671,30 +725,22 @@
         <button class="btn-cambiar" id="btnCambiarUsuario">Cambiar usuario</button>
       `;
       container.appendChild(div);
-
-      // Cargar contador de visitas (también para Invitado)
       obtenerVisitas(nombre).then(visitas => {
         const span = document.getElementById('contadorValor');
         if (span) span.textContent = visitas;
       });
-
-      // Botón cambiar usuario
       document.getElementById('btnCambiarUsuario')?.addEventListener('click', () => {
         localStorage.removeItem(STORAGE_KEY);
         mostrarModal();
-        // Ocultar el usuario actual
         container.innerHTML = '';
       });
     }
 
     function mostrarModal() {
-      // Si ya existe un modal, no lo duplicamos
       if (document.getElementById('modalLogin')) return;
-
       const modal = document.createElement('div');
       modal.id = 'modalLogin';
       modal.className = 'modal-overlay';
-
       modal.innerHTML = `
         <div class="modal-content">
           <h2>👋 Bienvenido a LuigiBET 2026</h2>
@@ -707,12 +753,9 @@
           <p class="nota">* Tus apuestas se mantendrán asociadas a este nombre.</p>
         </div>
       `;
-
       document.body.appendChild(modal);
-
       const btnConfirmar = document.getElementById('btnConfirmarUsuario');
       const selectUsuario = document.getElementById('selectUsuario');
-
       const seleccionar = async () => {
         const nombre = selectUsuario.value;
         if (nombre) {
@@ -724,13 +767,10 @@
           alert('Por favor selecciona un participante.');
         }
       };
-
       btnConfirmar.addEventListener('click', seleccionar);
       selectUsuario.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') seleccionar();
       });
-
-      // Cerrar modal si se hace clic fuera del contenido
       modal.addEventListener('click', (e) => {
         if (e.target === modal) {
           // No cerramos, forzamos a elegir
@@ -738,14 +778,12 @@
       });
     }
 
-    // Inicializar sistema de usuario
     function iniciarSistemaUsuario() {
       const usuarioGuardado = localStorage.getItem(STORAGE_KEY);
       if (usuarioGuardado && LISTA_PARTICIPANTES.includes(usuarioGuardado)) {
         mostrarUsuarioActual(usuarioGuardado);
         registrarVisita(usuarioGuardado);
       } else {
-        // Si el usuario guardado no está en la lista, lo eliminamos
         if (usuarioGuardado) {
           localStorage.removeItem(STORAGE_KEY);
         }
@@ -981,21 +1019,16 @@
             'Accept': 'text/csv, application/csv, text/plain'
           }
         });
-        
         if (!response.ok) {
           throw new Error(`HTTP ${response.status} - ${response.statusText}`);
         }
-        
         const csvText = await response.text();
-        
         if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
           throw new Error(`La hoja "${SHEET_NAME}" no es pública o no existe.`);
         }
-        
         if (!csvText || csvText.trim() === '') {
           throw new Error(`La hoja "${SHEET_NAME}" está vacía.`);
         }
-        
         return csvText;
       } catch (error) {
         console.error("Error al obtener CSV:", error);
@@ -1007,7 +1040,6 @@
       const lines = [];
       let currentLine = '';
       let insideQuotes = false;
-      
       for (let i = 0; i < csv.length; i++) {
         const char = csv[i];
         if (char === '"') {
@@ -1062,13 +1094,11 @@
         });
         data.push(row);
       }
-      
       return data;
     }
 
     function ordenarParticipantes(data) {
       if (!data || data.length === 0) return [];
-      
       const headers = Object.keys(data[0] || {});
       const colParticipante = headers.find(h => /participante|nombre|jugador|participants/i.test(h)) || headers[0];
       const colPuntos = headers.find(h => /puntos|puntaje|pts|points/i.test(h)) || headers[1];
@@ -1085,15 +1115,12 @@
           }
           return val;
         };
-        
         const nombre = clean(row[colParticipante]);
         if (!nombre || nombre === '' || nombre === 'Participantes') return null;
-        
         const puntos = parseFloat(clean(row[colPuntos]).replace(',', '.')) || 0;
         const aciertos = parseFloat(clean(row[colAciertos]).replace(',', '.')) || 0;
         const exactos = parseFloat(clean(row[colExactos]).replace(',', '.')) || 0;
         const inscripcion = parseFloat(clean(row[colInscripcion]).replace(',', '.')) || 0;
-        
         return {
           nombre: nombre,
           puntos,
@@ -1139,9 +1166,18 @@
         const pos = index + 1;
         let medalla = '';
         let claseFila = '';
-        if (pos === 1) { medalla = '🥇'; claseFila = 'fila-oro'; }
-        else if (pos === 2) { medalla = '🥈'; claseFila = 'fila-plata'; }
-        else if (pos === 3) { medalla = '🥉'; claseFila = 'fila-bronce'; }
+        
+        // Asignar medallas para los primeros 3
+        if (pos === 1) { medalla = '🥇'; }
+        else if (pos === 2) { medalla = '🥈'; }
+        else if (pos === 3) { medalla = '🥉'; }
+        
+        // Asignar color según clasificación: 1-6 verde, 7-11 rojo
+        if (pos <= 6) {
+          claseFila = 'fila-clasificado';
+        } else {
+          claseFila = 'fila-eliminado';
+        }
         
         html += `<tr class="${claseFila}">
           <td><span class="num-pos">${pos} <span class="medalla">${medalla}</span></span></td>
@@ -1198,15 +1234,11 @@
       try {
         const csv = await obtenerDatosTabla();
         console.log('CSV obtenido (primeros 200 caracteres):', csv.substring(0, 200));
-        
         const data = parseCSV(csv);
         console.log('Datos parseados (cantidad de filas):', data.length);
-        
         if (!data || data.length === 0) throw new Error(`No se encontraron datos en la hoja.`);
-        
         const top11 = ordenarParticipantes(data);
         console.log('Top 11 ordenados:', top11);
-        
         estadoDiv.textContent = `✅ ${top11.length} participantes cargados.`;
         estadoDiv.className = 'estado-carga exito';
         renderizarTabla(top11);
@@ -1222,12 +1254,10 @@
       }
     }
 
-    // Inicializar todo
     async function inicializarTodo() {
       await Promise.all([cargarFixture(), cargarTabla()]);
     }
 
-    // Mecanismo de pestañas
     function setupTabs() {
       const tabs = document.querySelectorAll('.tab-btn');
       const panels = {
@@ -1249,14 +1279,9 @@
     // ================================================================
     // 6. INICIO
     // ================================================================
-    // Iniciar sistema de usuario
     iniciarSistemaUsuario();
-
-    // Configurar pestañas y cargar datos
     setupTabs();
     inicializarTodo();
-
-    // Recargar todo
     document.getElementById('btnRecargar').addEventListener('click', inicializarTodo);
 
   })();
