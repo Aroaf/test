@@ -413,6 +413,98 @@
       border-bottom-color: #e6b88a;
     }
 
+    /* ===== USUARIO ACTUAL ===== */
+    .usuario-actual {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      margin-top: 10px;
+      font-size: 14px;
+      background-color: #e9ecef;
+      padding: 5px 15px;
+      border-radius: 30px;
+      width: fit-content;
+    }
+    .usuario-actual .btn-cambiar {
+      background: none;
+      border: none;
+      color: #0047ab;
+      cursor: pointer;
+      font-weight: bold;
+      text-decoration: underline;
+    }
+    .usuario-actual .btn-cambiar:hover {
+      color: #002d6b;
+    }
+    .usuario-actual .visitas {
+      font-weight: 600;
+      color: #0f7a46;
+    }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      backdrop-filter: blur(3px);
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 20px;
+      padding: 30px;
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: 0 20px 35px rgba(0, 0, 0, 0.3);
+    }
+    .modal-content h2 {
+      margin-top: 0;
+      color: #0b3a8f;
+    }
+    .modal-content p {
+      color: var(--texto-sec);
+      margin-bottom: 15px;
+    }
+    .modal-content select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      margin-bottom: 20px;
+      background: white;
+    }
+    .modal-content select:focus {
+      outline: 2px solid rgba(0, 71, 171, 0.2);
+      border-color: var(--acento-2);
+    }
+    .modal-content .btn-ingresar {
+      background: linear-gradient(135deg, #0f7a46, #0c663a);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+    .modal-content .btn-ingresar:hover {
+      filter: brightness(1.06);
+    }
+    .modal-content .nota {
+      font-size: 12px;
+      color: #666;
+      margin-top: 20px;
+    }
+
     .pie {
       font-size: 12px;
       color: #e2e8f0;
@@ -439,6 +531,10 @@
         padding: 6px 12px;
         font-size: 0.8rem;
       }
+      .usuario-actual {
+        font-size: 12px;
+        padding: 4px 12px;
+      }
     }
   </style>
 </head>
@@ -451,6 +547,7 @@
     <div class="accion">
       <button class="btn-recargar" id="btnRecargar">🔄 Recargar datos</button>
     </div>
+    <div id="usuarioContainer"></div>
   </header>
 
   <!-- PESTAÑAS -->
@@ -479,9 +576,179 @@
 
 <script>
   (function() {
-    // --------------------------------------------------------------
-    // 1. TRADUCCIONES Y BANDERAS (para el fixture)
-    // --------------------------------------------------------------
+    // ================================================================
+    // 1. SISTEMA DE USUARIO Y VISITAS (INTEGRADO DESDE LA OTRA WEB)
+    // ================================================================
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-XI-wqSxdXUhDbRw0mGI_7vA29pfB92PY1KhqsyFFTmydCBQWY39ccQzo_6xWtbVTwg/exec';
+    const STORAGE_KEY = 'usuario_actual_polla_mundial';
+
+    // Lista de participantes (incluyendo "Invitado" al inicio)
+    const LISTA_PARTICIPANTES = [
+      'Invitado',
+      'Ariel',
+      'Camilo',
+      'Carito',
+      'Claudio Padilla',
+      'Daniela',
+      'Diego Toledo',
+      'Felipe Bustos',
+      'Felipe HD',
+      'Grace',
+      'Karen Garrido',
+      'Lando',
+      'Leo',
+      'Marcelitocuerdas',
+      'Marrosquino',
+      'María Isabel',
+      'Miry',
+      'Pablo Meliqueo',
+      'Papasote ALV',
+      'Rocio',
+      'Rodrigo Arriaza',
+      'Sergio Luigi',
+      'Stuart'
+    ];
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
+
+    async function registrarVisita(participante) {
+      if (!participante || participante === 'Invitado') return;
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participante: participante })
+        });
+        console.log(`✅ Visita registrada para: ${participante}`);
+      } catch (err) {
+        console.error('❌ Error al registrar visita:', err);
+      }
+    }
+
+    async function obtenerVisitas(participante) {
+      if (!participante || participante === 'Invitado') return 0;
+      try {
+        const url = `${SCRIPT_URL}?participante=${encodeURIComponent(participante)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.visitas || 0;
+      } catch (err) {
+        console.error('Error al obtener visitas:', err);
+        return 0;
+      }
+    }
+
+    function mostrarUsuarioActual(nombre) {
+      const container = document.getElementById('usuarioContainer');
+      if (!container) return;
+
+      // Eliminar contenido anterior
+      container.innerHTML = '';
+
+      if (!nombre) return;
+
+      const div = document.createElement('div');
+      div.className = 'usuario-actual';
+      div.innerHTML = `
+        <span>👤 <strong>${escapeHtml(nombre)}</strong></span>
+        <span class="visitas">👁️ Visitas: <span id="contadorValor">--</span></span>
+        <button class="btn-cambiar" id="btnCambiarUsuario">Cambiar usuario</button>
+      `;
+      container.appendChild(div);
+
+      // Cargar contador de visitas
+      obtenerVisitas(nombre).then(visitas => {
+        const span = document.getElementById('contadorValor');
+        if (span) span.textContent = visitas;
+      });
+
+      // Botón cambiar usuario
+      document.getElementById('btnCambiarUsuario')?.addEventListener('click', () => {
+        localStorage.removeItem(STORAGE_KEY);
+        mostrarModal();
+        // Ocultar el usuario actual
+        container.innerHTML = '';
+      });
+    }
+
+    function mostrarModal() {
+      // Si ya existe un modal, no lo duplicamos
+      if (document.getElementById('modalLogin')) return;
+
+      const modal = document.createElement('div');
+      modal.id = 'modalLogin';
+      modal.className = 'modal-overlay';
+
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h2>👋 Bienvenido a LuigiBET 2026</h2>
+          <p>Selecciona tu nombre para continuar:</p>
+          <select id="selectUsuario">
+            <option value="">-- Elige tu usuario --</option>
+            ${LISTA_PARTICIPANTES.map(p => `<option value="${p.replace(/"/g, '&quot;')}">${p}</option>`).join('')}
+          </select>
+          <button class="btn-ingresar" id="btnConfirmarUsuario">Ingresar</button>
+          <p class="nota">* Tus apuestas se mantendrán asociadas a este nombre.</p>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      const btnConfirmar = document.getElementById('btnConfirmarUsuario');
+      const selectUsuario = document.getElementById('selectUsuario');
+
+      const seleccionar = async () => {
+        const nombre = selectUsuario.value;
+        if (nombre) {
+          localStorage.setItem(STORAGE_KEY, nombre);
+          await registrarVisita(nombre);
+          modal.remove();
+          mostrarUsuarioActual(nombre);
+        } else {
+          alert('Por favor selecciona un participante.');
+        }
+      };
+
+      btnConfirmar.addEventListener('click', seleccionar);
+      selectUsuario.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') seleccionar();
+      });
+
+      // Cerrar modal si se hace clic fuera del contenido
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          // No cerramos, forzamos a elegir
+        }
+      });
+    }
+
+    // Inicializar sistema de usuario
+    function iniciarSistemaUsuario() {
+      const usuarioGuardado = localStorage.getItem(STORAGE_KEY);
+      if (usuarioGuardado && LISTA_PARTICIPANTES.includes(usuarioGuardado)) {
+        mostrarUsuarioActual(usuarioGuardado);
+        registrarVisita(usuarioGuardado);
+      } else {
+        // Si el usuario guardado no está en la lista, lo eliminamos
+        if (usuarioGuardado) {
+          localStorage.removeItem(STORAGE_KEY);
+        }
+        mostrarModal();
+      }
+    }
+
+    // ================================================================
+    // 2. TRADUCCIONES Y BANDERAS (para el fixture)
+    // ================================================================
     const traducciones = {
       "Mexico": "México", "South Korea": "Corea del Sur", "Korea Republic": "Corea del Sur",
       "Czech Republic": "Chequia", "Czechia": "Chequia", "South Africa": "Sudáfrica",
@@ -530,9 +797,9 @@
       return '';
     }
 
-    // --------------------------------------------------------------
-    // 2. FUNCIONES PARA EL FIXTURE
-    // --------------------------------------------------------------
+    // ================================================================
+    // 3. FUNCIONES PARA EL FIXTURE
+    // ================================================================
     const API_URL = "https://worldcup26.ir/get/games";
 
     async function obtenerDatosAPI() {
@@ -691,9 +958,9 @@
       });
     }
 
-    // --------------------------------------------------------------
-    // 3. FUNCIONES PARA LA TABLA DE POSICIONES (MEJORADA)
-    // --------------------------------------------------------------
+    // ================================================================
+    // 4. FUNCIONES PARA LA TABLA DE POSICIONES
+    // ================================================================
     const SHEET_ID = "1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM";
     const SHEET_NAME = "Tabla dinámica 5";
     const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
@@ -883,9 +1150,9 @@
       container.innerHTML = html;
     }
 
-    // --------------------------------------------------------------
-    // 4. FLUJO PRINCIPAL Y PESTAÑAS
-    // --------------------------------------------------------------
+    // ================================================================
+    // 5. FLUJO PRINCIPAL Y PESTAÑAS
+    // ================================================================
     async function cargarFixture() {
       const estadoDiv = document.getElementById('estadoCargaFixture');
       const container = document.getElementById('bracketContainer');
@@ -972,12 +1239,18 @@
       });
     }
 
-    // Recargar todo
-    document.getElementById('btnRecargar').addEventListener('click', inicializarTodo);
+    // ================================================================
+    // 6. INICIO
+    // ================================================================
+    // Iniciar sistema de usuario
+    iniciarSistemaUsuario();
 
-    // Ejecutar
+    // Configurar pestañas y cargar datos
     setupTabs();
     inicializarTodo();
+
+    // Recargar todo
+    document.getElementById('btnRecargar').addEventListener('click', inicializarTodo);
 
   })();
 </script>
