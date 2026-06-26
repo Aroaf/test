@@ -1159,7 +1159,7 @@
     async function cargarTabla() {
       const estadoDiv = document.getElementById('estadoCargaTabla');
       const container = document.getElementById('tablaContainer');
-      estadoDiv.textContent = `⏳ Cargando datos desde la hoja "${SHEET_NAME}"...`;
+      estadoDiv.textContent = `⏳ Cargando datos...`;
       estadoDiv.className = 'estado-carga';
       container.innerHTML = '';
 
@@ -1170,12 +1170,12 @@
         const data = parseCSV(csv);
         console.log('Datos parseados (cantidad de filas):', data.length);
         
-        if (!data || data.length === 0) throw new Error(`No se encontraron datos en la hoja "${SHEET_NAME}".`);
+        if (!data || data.length === 0) throw new Error(`No se encontraron datos.`);
         
         const top11 = ordenarParticipantes(data);
         console.log('Top 11 ordenados:', top11);
         
-        estadoDiv.textContent = `✅ ${top11.length} participantes cargados desde "${SHEET_NAME}" (Top 11).`;
+        estadoDiv.textContent = `✅ ${top11.length} participantes cargados.`;
         estadoDiv.className = 'estado-carga exito';
         renderizarTabla(top11);
       } catch (error) {
@@ -1184,7 +1184,7 @@
         container.innerHTML = `<div style="padding: 20px; text-align: center; color: #991b1b; background: #fee2e2; border-radius: 8px; border: 1px solid #fecaca;">
           <p style="font-weight: bold; font-size: 1.1rem;">⚠️ No se pudo cargar la tabla</p>
           <p style="margin-top: 8px;">${error.message}</p>
-          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica que la hoja "${SHEET_NAME}" sea pública y contenga datos en el rango A1:E23.</p>
+          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica que la hoja con los datos sea pública.</p>
         </div>`;
         console.error("Error en cargarTabla:", error);
       }
