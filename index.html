@@ -334,48 +334,83 @@
       }
     }
 
-    /* ===== TABLA DE POSICIONES ===== */
+    /* ===== TABLA DE POSICIONES MEJORADA ===== */
     .tabla-posiciones {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.9rem;
+      font-size: 0.95rem;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     }
     .tabla-posiciones thead th {
       text-align: left;
-      padding: 10px 12px;
-      background-color: #f1f5f9;
-      border-bottom: 2px solid var(--borde);
+      padding: 12px 16px;
+      background: #f8fafc;
+      border-bottom: 3px solid #0f7a46;
       font-weight: 700;
-      color: #0b3a8f;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #1e293b;
     }
     .tabla-posiciones tbody td {
-      padding: 10px 12px;
-      border-bottom: 1px solid var(--linea);
+      padding: 12px 16px;
+      border-bottom: 2px solid #e9edf2;
       vertical-align: middle;
+    }
+    .tabla-posiciones tbody tr:last-child td {
+      border-bottom: none;
     }
     .tabla-posiciones tbody tr:hover {
       background-color: #f8fafc;
     }
-    .tabla-posiciones .medalla {
-      font-size: 1.2rem;
-      margin-right: 4px;
-    }
     .tabla-posiciones .num-pos {
       font-weight: 700;
-      color: var(--texto-sec);
+      font-size: 1rem;
+      color: #334155;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .tabla-posiciones .num-pos .medalla {
+      font-size: 1.3rem;
+      line-height: 1;
     }
     .tabla-posiciones .participante {
-      font-weight: 600;
+      font-weight: 700;
+      color: #0f172a;
+      font-size: 1rem;
     }
     .tabla-posiciones .puntaje {
-      font-weight: 700;
+      font-weight: 800;
       color: #0f7a46;
+      font-size: 1.1rem;
     }
     .tabla-posiciones .col-center {
       text-align: center;
     }
     .tabla-posiciones .col-der {
       text-align: right;
+    }
+    /* Estilos para el top 3 con colores de medalla */
+    .tabla-posiciones .fila-oro {
+      background: #fef9e7;
+    }
+    .tabla-posiciones .fila-plata {
+      background: #f1f5f9;
+    }
+    .tabla-posiciones .fila-bronce {
+      background: #fdf2e9;
+    }
+    .tabla-posiciones .fila-oro td {
+      border-bottom-color: #f5d76e;
+    }
+    .tabla-posiciones .fila-plata td {
+      border-bottom-color: #d5d8dc;
+    }
+    .tabla-posiciones .fila-bronce td {
+      border-bottom-color: #e6b88a;
     }
 
     .pie {
@@ -391,13 +426,13 @@
 
     @media (max-width: 700px) {
       .tabla-posiciones {
-        font-size: 0.75rem;
+        font-size: 0.8rem;
       }
       .tabla-posiciones thead th,
       .tabla-posiciones tbody td {
-        padding: 6px 8px;
+        padding: 8px 10px;
       }
-      .tabla-posiciones .medalla {
+      .tabla-posiciones .num-pos .medalla {
         font-size: 1rem;
       }
       .tab-btn {
@@ -421,13 +456,13 @@
   <!-- PESTAÑAS -->
   <div class="tabs" id="tabsContainer">
     <button class="tab-btn activa" data-tab="tabFixture">📋 Cuadro del torneo</button>
-    <button class="tab-btn" data-tab="tabTabla">🏅 Tabla de Posiciones (Clasificados) </button>
+    <button class="tab-btn" data-tab="tabTabla">🏅 Tabla de Posiciones</button>
   </div>
 
   <!-- PANEL FIXTURE -->
   <section id="tabFixture" class="panel-tab activo">
     <h2>📋 Cuadro del torneo (Eliminación directa)</h2>
-    <div id="estadoCargaFixture" class="estado-carga">Cargando datos...</div>
+    <div id="estadoCargaFixture" class="estado-carga">Cargando datos desde la API...</div>
     <div id="bracketContainer" class="bracket"></div>
   </section>
 
@@ -657,12 +692,9 @@
     }
 
     // --------------------------------------------------------------
-    // 3. FUNCIONES PARA LA TABLA DE POSICIONES (CORREGIDO - HOJA "Tabla dinámica 5")
+    // 3. FUNCIONES PARA LA TABLA DE POSICIONES (MEJORADA)
     // --------------------------------------------------------------
     const SHEET_ID = "1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM";
-    // NOTA: El gid=0 es la primera hoja. Para "Tabla dinámica 5" necesitamos su gid específico.
-    // Como no sabemos el gid exacto, usamos el nombre de la hoja en la URL.
-    // Opción 1: Usar el nombre de la hoja en la URL
     const SHEET_NAME = "Tabla dinámica 5";
     const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
@@ -682,9 +714,8 @@
         
         const csvText = await response.text();
         
-        // Verificar que no sea HTML (página de error o login)
         if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
-          throw new Error(`La hoja "${SHEET_NAME}" no es pública o no existe. Por favor, comparte la hoja como "Cualquier persona con el enlace" con permiso de "Lector".`);
+          throw new Error(`La hoja "${SHEET_NAME}" no es pública o no existe.`);
         }
         
         if (!csvText || csvText.trim() === '') {
@@ -699,7 +730,6 @@
     }
 
     function parseCSV(csv) {
-      // Dividir por saltos de línea, manejando posibles comillas
       const lines = [];
       let currentLine = '';
       let insideQuotes = false;
@@ -724,7 +754,6 @@
         return [];
       }
 
-      // Parsear cada línea respetando comillas
       function parseLine(line) {
         const values = [];
         let current = '';
@@ -766,7 +795,6 @@
     function ordenarParticipantes(data) {
       if (!data || data.length === 0) return [];
       
-      // Buscar las columnas correctas
       const headers = Object.keys(data[0] || {});
       const colParticipante = headers.find(h => /participante|nombre|jugador|participants/i.test(h)) || headers[0];
       const colPuntos = headers.find(h => /puntos|puntaje|pts|points/i.test(h)) || headers[1];
@@ -776,7 +804,6 @@
 
       console.log('Columnas detectadas:', { colParticipante, colPuntos, colAciertos, colExactos, colInscripcion });
 
-      // Convertir a números
       const participantes = data.map(row => {
         const clean = (val) => {
           if (typeof val === 'string') {
@@ -786,7 +813,6 @@
         };
         
         const nombre = clean(row[colParticipante]);
-        // Ignorar filas sin nombre o con nombre vacío
         if (!nombre || nombre === '' || nombre === 'Participantes') return null;
         
         const puntos = parseFloat(clean(row[colPuntos]).replace(',', '.')) || 0;
@@ -803,7 +829,6 @@
         };
       }).filter(p => p !== null);
 
-      // Ordenar: puntos desc, aciertos desc, exactos desc, inscripcion asc
       participantes.sort((a, b) => {
         if (a.puntos !== b.puntos) return b.puntos - a.puntos;
         if (a.aciertos !== b.aciertos) return b.aciertos - a.aciertos;
@@ -819,7 +844,7 @@
       if (!container) return;
       
       if (!participantes || participantes.length === 0) {
-        container.innerHTML = `<p style="padding: 20px; text-align: center; color: #64748b;">No se encontraron participantes en la hoja "${SHEET_NAME}". Verifica que los datos estén en el rango A1:E23.</p>`;
+        container.innerHTML = `<p style="padding: 20px; text-align: center; color: #64748b;">No se encontraron participantes en la hoja "${SHEET_NAME}".</p>`;
         return;
       }
 
@@ -839,11 +864,13 @@
       participantes.forEach((p, index) => {
         const pos = index + 1;
         let medalla = '';
-        if (pos === 1) medalla = '🥇 ';
-        else if (pos === 2) medalla = '🥈 ';
-        else if (pos === 3) medalla = '🥉 ';
-        html += `<tr>
-          <td><span class="num-pos">${medalla}${pos}</span></td>
+        let claseFila = '';
+        if (pos === 1) { medalla = '🥇'; claseFila = 'fila-oro'; }
+        else if (pos === 2) { medalla = '🥈'; claseFila = 'fila-plata'; }
+        else if (pos === 3) { medalla = '🥉'; claseFila = 'fila-bronce'; }
+        
+        html += `<tr class="${claseFila}">
+          <td><span class="num-pos">${pos} <span class="medalla">${medalla}</span></span></td>
           <td class="participante">${p.nombre}</td>
           <td class="col-center puntaje">${p.puntos}</td>
           <td class="col-center">${p.aciertos}</td>
@@ -915,8 +942,7 @@
         container.innerHTML = `<div style="padding: 20px; text-align: center; color: #991b1b; background: #fee2e2; border-radius: 8px; border: 1px solid #fecaca;">
           <p style="font-weight: bold; font-size: 1.1rem;">⚠️ No se pudo cargar la tabla</p>
           <p style="margin-top: 8px;">${error.message}</p>
-          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica que la hoja "${SHEET_NAME}" sea pública (Archivo > Compartir > Cualquier persona con el enlace) y que contenga datos en el rango A1:E23.</p>
-          <p style="margin-top: 8px; font-size: 0.8rem; color: #64748b;">URL de la hoja: <a href="https://docs.google.com/spreadsheets/d/1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM/edit?usp=sharing" target="_blank" style="color: #0047ab;">Abrir hoja</a></p>
+          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica que la hoja "${SHEET_NAME}" sea pública y contenga datos en el rango A1:E23.</p>
         </div>`;
         console.error("Error en cargarTabla:", error);
       }
