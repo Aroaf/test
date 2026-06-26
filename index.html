@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mundial 2026 – Fixture en Vivo</title>
+  <title>Mundial 2026 – Fixture y Tabla</title>
   <style>
     /* ========== ESQUEMA DE COLORES ORIGINAL ========== */
     :root {
@@ -105,7 +105,38 @@
       background: #f1f5f9;
     }
 
-    .bloque-fixture {
+    /* ===== PESTAÑAS ===== */
+    .tabs {
+      display: flex;
+      gap: 4px;
+      margin-bottom: 16px;
+      border-bottom: 2px solid var(--borde);
+      padding-bottom: 2px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--texto-sec);
+      cursor: pointer;
+      border-radius: 10px 10px 0 0;
+      transition: background 0.2s, color 0.2s;
+    }
+    .tab-btn:hover {
+      background: #e9edf2;
+      color: var(--texto);
+    }
+    .tab-btn.activa {
+      background: var(--tarjeta);
+      color: #0b3a8f;
+      box-shadow: 0 -2px 6px rgba(0,0,0,0.04);
+    }
+
+    .panel-tab {
+      display: none;
       background: var(--tarjeta);
       border: 1px solid rgba(255, 255, 255, 0.8);
       border-radius: 16px;
@@ -113,8 +144,11 @@
       box-shadow: var(--sombra);
       overflow-x: auto;
     }
+    .panel-tab.activo {
+      display: block;
+    }
 
-    .bloque-fixture h2 {
+    .panel-tab h2 {
       margin: 0 0 16px;
       color: #0b3a8f;
       font-size: 1.2rem;
@@ -142,12 +176,14 @@
       border: 1px solid #bbf7d0;
     }
 
+    /* ===== BRACKET ===== */
     .bracket {
       display: flex;
       gap: 24px;
       padding: 10px 0;
       justify-content: flex-start;
       align-items: stretch;
+      overflow-x: auto;
     }
 
     .ronda {
@@ -156,7 +192,6 @@
       justify-content: space-around;
       flex: 0 0 auto;
       gap: 6px;
-      /* El min-width se establecerá dinámicamente */
     }
 
     .ronda-titulo {
@@ -185,7 +220,6 @@
       transition: background 0.1s;
       width: 100%;
       min-height: 40px;
-      /* El ancho se ajustará dinámicamente */
     }
 
     .partido:hover {
@@ -216,7 +250,6 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      /* max-width se controlará desde el contenedor */
     }
 
     .equipo-nombre img {
@@ -301,6 +334,50 @@
       }
     }
 
+    /* ===== TABLA DE POSICIONES ===== */
+    .tabla-posiciones {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .tabla-posiciones thead th {
+      text-align: left;
+      padding: 10px 12px;
+      background-color: #f1f5f9;
+      border-bottom: 2px solid var(--borde);
+      font-weight: 700;
+      color: #0b3a8f;
+    }
+    .tabla-posiciones tbody td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--linea);
+      vertical-align: middle;
+    }
+    .tabla-posiciones tbody tr:hover {
+      background-color: #f8fafc;
+    }
+    .tabla-posiciones .medalla {
+      font-size: 1.2rem;
+      margin-right: 4px;
+    }
+    .tabla-posiciones .num-pos {
+      font-weight: 700;
+      color: var(--texto-sec);
+    }
+    .tabla-posiciones .participante {
+      font-weight: 600;
+    }
+    .tabla-posiciones .puntaje {
+      font-weight: 700;
+      color: #0f7a46;
+    }
+    .tabla-posiciones .col-center {
+      text-align: center;
+    }
+    .tabla-posiciones .col-der {
+      text-align: right;
+    }
+
     .pie {
       font-size: 12px;
       color: #e2e8f0;
@@ -311,6 +388,23 @@
     .pie strong {
       color: #ffffff;
     }
+
+    @media (max-width: 700px) {
+      .tabla-posiciones {
+        font-size: 0.75rem;
+      }
+      .tabla-posiciones thead th,
+      .tabla-posiciones tbody td {
+        padding: 6px 8px;
+      }
+      .tabla-posiciones .medalla {
+        font-size: 1rem;
+      }
+      .tab-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+      }
+    }
   </style>
 </head>
 <body>
@@ -318,18 +412,32 @@
 
   <header class="cabecera">
     <h1>🏆 Mundial de Fútbol 2026</h1>
-    <p class="subtitulo">Fixture en vivo</p>
+    <p class="subtitulo">Fixture y tabla de posiciones en vivo</p>
     <div class="accion">
       <button class="btn-recargar" id="btnRecargar">🔄 Recargar datos</button>
     </div>
   </header>
 
-  <section class="bloque-fixture">
+  <!-- PESTAÑAS -->
+  <div class="tabs" id="tabsContainer">
+    <button class="tab-btn activa" data-tab="tabFixture">📋 Cuadro del torneo</button>
+    <button class="tab-btn" data-tab="tabTabla">🏅 Tabla de Posiciones (Clasificados) </button>
+  </div>
+
+  <!-- PANEL FIXTURE -->
+  <section id="tabFixture" class="panel-tab activo">
     <h2>📋 Cuadro del torneo (Eliminación directa)</h2>
-    <div id="estadoCarga" class="estado-carga">Cargando datos desde la API...</div>
+    <div id="estadoCargaFixture" class="estado-carga">Cargando datos...</div>
     <div id="bracketContainer" class="bracket"></div>
   </section>
-  
+
+  <!-- PANEL TABLA -->
+  <section id="tabTabla" class="panel-tab">
+    <h2>🏅 Tabla de Posiciones (Top 11)</h2>
+    <div id="estadoCargaTabla" class="estado-carga">Cargando datos desde Google Sheets...</div>
+    <div id="tablaContainer"></div>
+  </section>
+
   <p class="pie"><strong>Aroa</strong></p>
   <p class="pie">Powered by <strong>LuigiBET (c)</strong></p>
 </div>
@@ -337,122 +445,46 @@
 <script>
   (function() {
     // --------------------------------------------------------------
-    // 0. TRADUCCIONES DE NOMBRES DE EQUIPOS (INGLÉS → ESPAÑOL)
+    // 1. TRADUCCIONES Y BANDERAS (para el fixture)
     // --------------------------------------------------------------
     const traducciones = {
-      "Mexico": "México",
-      "South Korea": "Corea del Sur",
-      "Korea Republic": "Corea del Sur",
-      "Czech Republic": "Chequia",
-      "Czechia": "Chequia",
-      "South Africa": "Sudáfrica",
-      "Canada": "Canadá",
-      "Qatar": "Catar",
-      "Switzerland": "Suiza",
-      "Bosnia and Herzegovina": "Bosnia H.",
-      "Bosnia": "Bosnia H.",
-      "Brazil": "Brasil",
-      "Haiti": "Haití",
-      "Scotland": "Escocia",
-      "Morocco": "Marruecos",
-      "United States": "Estados Unidos",
-      "USA": "Estados Unidos",
-      "Australia": "Australia",
-      "Turkey": "Turquía",
-      "Paraguay": "Paraguay",
-      "Germany": "Alemania",
-      "Ivory Coast": "Costa de Marfil",
-      "Côte d'Ivoire": "Costa de Marfil",
-      "Ecuador": "Ecuador",
-      "Curaçao": "Curazao",
-      "Netherlands": "Países Bajos",
-      "Sweden": "Suecia",
-      "Tunisia": "Túnez",
-      "Japan": "Japón",
-      "Iran": "Irán",
-      "Belgium": "Bélgica",
-      "New Zealand": "Nueva Zelanda",
-      "Egypt": "Egipto",
-      "Saudi Arabia": "Arabia Saudita",
-      "Spain": "España",
-      "Uruguay": "Uruguay",
-      "Cape Verde": "Cabo Verde",
-      "Iraq": "Irak",
-      "France": "Francia",
-      "Norway": "Noruega",
-      "Senegal": "Senegal",
-      "Austria": "Austria",
-      "Argentina": "Argentina",
-      "Jordan": "Jordania",
-      "Algeria": "Argelia",
-      "Uzbekistan": "Uzbekistán",
-      "Portugal": "Portugal",
-      "Colombia": "Colombia",
-      "Congo DR": "R.D. del Congo",
+      "Mexico": "México", "South Korea": "Corea del Sur", "Korea Republic": "Corea del Sur",
+      "Czech Republic": "Chequia", "Czechia": "Chequia", "South Africa": "Sudáfrica",
+      "Canada": "Canadá", "Qatar": "Catar", "Switzerland": "Suiza",
+      "Bosnia and Herzegovina": "Bosnia H.", "Bosnia": "Bosnia H.",
+      "Brazil": "Brasil", "Haiti": "Haití", "Scotland": "Escocia",
+      "Morocco": "Marruecos", "United States": "Estados Unidos", "USA": "Estados Unidos",
+      "Australia": "Australia", "Turkey": "Turquía", "Paraguay": "Paraguay",
+      "Germany": "Alemania", "Ivory Coast": "Costa de Marfil", "Côte d'Ivoire": "Costa de Marfil",
+      "Ecuador": "Ecuador", "Curaçao": "Curazao", "Netherlands": "Países Bajos",
+      "Sweden": "Suecia", "Tunisia": "Túnez", "Japan": "Japón",
+      "Iran": "Irán", "Belgium": "Bélgica", "New Zealand": "Nueva Zelanda",
+      "Egypt": "Egipto", "Saudi Arabia": "Arabia Saudita", "Spain": "España",
+      "Uruguay": "Uruguay", "Cape Verde": "Cabo Verde", "Iraq": "Irak",
+      "France": "Francia", "Norway": "Noruega", "Senegal": "Senegal",
+      "Austria": "Austria", "Argentina": "Argentina", "Jordan": "Jordania",
+      "Algeria": "Argelia", "Uzbekistan": "Uzbekistán", "Portugal": "Portugal",
+      "Colombia": "Colombia", "Congo DR": "R.D. del Congo",
       "Democratic Republic of the Congo": "R.D. del Congo",
-      "Ghana": "Ghana",
-      "England": "Inglaterra",
-      "Panama": "Panamá",
+      "Ghana": "Ghana", "England": "Inglaterra", "Panama": "Panamá",
       "Croatia": "Croacia"
     };
 
-    // --------------------------------------------------------------
-    // 1. DICCIONARIO DE BANDERAS (COPIADO EXACTO DEL SEGUNDO ARCHIVO)
-    // --------------------------------------------------------------
     const BANDERAS = {
-      "México": "mx",
-      "Sudáfrica": "za",
-      "Corea del Sur": "kr",
-      "Chequia": "cz",
-      "Canadá": "ca",
-      "Bosnia H.": "ba",
-      "Catar": "qa",
-      "Suiza": "ch",
-      "Brasil": "br",
-      "Marruecos": "ma",
-      "Haití": "ht",
-      "Escocia": "gb-sct",
-      "Estados Unidos": "us",
-      "Paraguay": "py",
-      "Australia": "au",
-      "Turquía": "tr",
-      "Alemania": "de",
-      "Curazao": "cw",
-      "Costa de Marfil": "ci",
-      "Ecuador": "ec",
-      "Países Bajos": "nl",
-      "Japón": "jp",
-      "Suecia": "se",
-      "Túnez": "tn",
-      "Irán": "ir",
-      "Nueva Zelanda": "nz",
-      "Bélgica": "be",
-      "Egipto": "eg",
-      "Arabia Saudita": "sa",
-      "Uruguay": "uy",
-      "España": "es",
-      "Cabo Verde": "cv",
-      "Irak": "iq",
-      "Noruega": "no",
-      "Francia": "fr",
-      "Senegal": "sn",
-      "Austria": "at",
-      "Jordania": "jo",
-      "Argentina": "ar",
-      "Argelia": "dz",
-      "Uzbekistán": "uz",
-      "Colombia": "co",
-      "Portugal": "pt",
-      "R.D. del Congo": "cd",
-      "Ghana": "gh",
-      "Panamá": "pa",
-      "Inglaterra": "gb-eng",
-      "Croacia": "hr"
+      "México": "mx", "Sudáfrica": "za", "Corea del Sur": "kr", "Chequia": "cz",
+      "Canadá": "ca", "Bosnia H.": "ba", "Catar": "qa", "Suiza": "ch",
+      "Brasil": "br", "Marruecos": "ma", "Haití": "ht", "Escocia": "gb-sct",
+      "Estados Unidos": "us", "Paraguay": "py", "Australia": "au", "Turquía": "tr",
+      "Alemania": "de", "Curazao": "cw", "Costa de Marfil": "ci", "Ecuador": "ec",
+      "Países Bajos": "nl", "Japón": "jp", "Suecia": "se", "Túnez": "tn",
+      "Irán": "ir", "Nueva Zelanda": "nz", "Bélgica": "be", "Egipto": "eg",
+      "Arabia Saudita": "sa", "Uruguay": "uy", "España": "es", "Cabo Verde": "cv",
+      "Irak": "iq", "Noruega": "no", "Francia": "fr", "Senegal": "sn",
+      "Austria": "at", "Jordania": "jo", "Argentina": "ar", "Argelia": "dz",
+      "Uzbekistán": "uz", "Colombia": "co", "Portugal": "pt", "R.D. del Congo": "cd",
+      "Ghana": "gh", "Panamá": "pa", "Inglaterra": "gb-eng", "Croacia": "hr"
     };
 
-    // --------------------------------------------------------------
-    // 2. FUNCIÓN PARA OBTENER HTML DE BANDERA
-    // --------------------------------------------------------------
     function obtenerHtmlConBandera(nombrePais) {
       if (!nombrePais) return '';
       const paisLimpio = nombrePais.trim();
@@ -464,19 +496,13 @@
     }
 
     // --------------------------------------------------------------
-    // 3. URL DE LA API
+    // 2. FUNCIONES PARA EL FIXTURE
     // --------------------------------------------------------------
     const API_URL = "https://worldcup26.ir/get/games";
 
-    // --------------------------------------------------------------
-    // 4. OBTENER DATOS DESDE LA API
-    // --------------------------------------------------------------
     async function obtenerDatosAPI() {
       try {
-        const respuesta = await fetch(API_URL, {
-          cache: 'no-store',
-          headers: { 'Accept': 'application/json' }
-        });
+        const respuesta = await fetch(API_URL, { cache: 'no-store', headers: { 'Accept': 'application/json' } });
         if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status} - ${respuesta.statusText}`);
         const data = await respuesta.json();
         return data.games || [];
@@ -486,19 +512,14 @@
       }
     }
 
-    // --------------------------------------------------------------
-    // 5. FILTRAR Y ORGANIZAR PARTIDOS DE ELIMINACIÓN DIRECTA
-    // --------------------------------------------------------------
     function organizarPartidos(todos) {
       const tiposKnockout = ['r32', 'r16', 'qf', 'sf', 'final'];
       const knockouts = todos.filter(p => tiposKnockout.includes(p.type));
-
       const porTipo = {};
       knockouts.forEach(p => {
         if (!porTipo[p.type]) porTipo[p.type] = [];
         porTipo[p.type].push(p);
       });
-
       const ordenTipos = ['r32', 'r16', 'qf', 'sf', 'final'];
       const resultado = {};
       ordenTipos.forEach(tipo => {
@@ -512,22 +533,12 @@
       return resultado;
     }
 
-    // --------------------------------------------------------------
-    // 6. RENDERIZAR BRACKET (CON BANDERAS Y AJUSTE DE ANCHO)
-    // --------------------------------------------------------------
     function renderizarBracket(partidosPorTipo) {
       const container = document.getElementById('bracketContainer');
       if (!container) return;
       container.innerHTML = '';
 
-      const titulos = {
-        'r32': '16avos',
-        'r16': 'Octavos',
-        'qf': 'Cuartos',
-        'sf': 'Semifinales',
-        'final': 'Final'
-      };
-
+      const titulos = { 'r32': '16avos', 'r16': 'Octavos', 'qf': 'Cuartos', 'sf': 'Semifinales', 'final': 'Final' };
       const tipos = ['r32', 'r16', 'qf', 'sf', 'final'];
 
       tipos.forEach((tipo) => {
@@ -554,7 +565,6 @@
           const div = document.createElement('div');
           div.className = 'partido';
 
-          // Obtener nombres en inglés y traducir a español
           const localIng = p.home_team_name_en || p.home_team_label || 'TBD';
           const visitaIng = p.away_team_name_en || p.away_team_label || 'TBD';
           const local = traducciones[localIng] || localIng;
@@ -614,40 +624,12 @@
         container.appendChild(columna);
       });
 
-      // --------------------------------------------------------------
-      // AJUSTAR ANCHO DE CADA RONDA SEGÚN EL NOMBRE MÁS LARGO
-      // --------------------------------------------------------------
+      // Ajuste de ancho
       function ajustarAnchos() {
         const columnas = container.querySelectorAll('.ronda');
         columnas.forEach(columna => {
-          // Obtener todos los nombres de equipos dentro de esta ronda
-          const nombres = columna.querySelectorAll('.equipo-nombre');
-          if (nombres.length === 0) return;
-
-          // Calcular el ancho máximo entre los nombres (incluyendo bandera y resultado)
-          // Para ello, clonamos temporalmente y medimos
-          let maxWidth = 0;
-          nombres.forEach(el => {
-            // Clonar el elemento, quitar el overflow hidden y medir
-            const clon = el.cloneNode(true);
-            clon.style.position = 'absolute';
-            clon.style.visibility = 'hidden';
-            clon.style.whiteSpace = 'nowrap';
-            clon.style.overflow = 'visible';
-            clon.style.maxWidth = 'none';
-            clon.style.width = 'auto';
-            document.body.appendChild(clon);
-            const ancho = clon.offsetWidth;
-            document.body.removeChild(clon);
-            if (ancho > maxWidth) maxWidth = ancho;
-          });
-
-          // Agregar un margen extra para el padding y el resultado (que está fuera)
-          // El resultado está en otro span, así que sumamos un ancho aproximado
-          // Pero el resultado ya está incluido en el clon porque está dentro del .equipo-nombre? No, el resultado es un span hermano.
-          // Mejor: calcular el ancho total del partido, no solo del nombre.
-          // Tomamos el ancho del .partido más ancho
           const partidos = columna.querySelectorAll('.partido');
+          if (partidos.length === 0) return;
           let maxPartidoWidth = 0;
           partidos.forEach(p => {
             const clonP = p.cloneNode(true);
@@ -660,14 +642,8 @@
             document.body.removeChild(clonP);
             if (anchoP > maxPartidoWidth) maxPartidoWidth = anchoP;
           });
-
-          // Si no se pudo medir, usar un valor por defecto
           if (maxPartidoWidth === 0) maxPartidoWidth = 160;
-
-          // Sumar un poco de padding (el padding de .partido es 4px 8px, así que sumamos 16px)
-          const anchoFinal = maxPartidoWidth + 16; // padding horizontal
-
-          // Aplicar el ancho a la columna y a cada partido
+          const anchoFinal = maxPartidoWidth + 16;
           columna.style.minWidth = anchoFinal + 'px';
           columna.style.maxWidth = anchoFinal + 'px';
           partidos.forEach(p => {
@@ -675,19 +651,216 @@
           });
         });
       }
-
-      // Ejecutar el ajuste después de que el DOM se haya actualizado
-      // Usamos requestAnimationFrame para asegurar que los elementos ya estén en el DOM
       requestAnimationFrame(() => {
         requestAnimationFrame(ajustarAnchos);
       });
     }
 
     // --------------------------------------------------------------
-    // 7. FLUJO PRINCIPAL
+    // 3. FUNCIONES PARA LA TABLA DE POSICIONES (CORREGIDO - HOJA "Tabla dinámica 5")
     // --------------------------------------------------------------
-    async function inicializarYRenderizar() {
-      const estadoDiv = document.getElementById('estadoCarga');
+    const SHEET_ID = "1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM";
+    // NOTA: El gid=0 es la primera hoja. Para "Tabla dinámica 5" necesitamos su gid específico.
+    // Como no sabemos el gid exacto, usamos el nombre de la hoja en la URL.
+    // Opción 1: Usar el nombre de la hoja en la URL
+    const SHEET_NAME = "Tabla dinámica 5";
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+    async function obtenerDatosTabla() {
+      try {
+        console.log('Intentando cargar desde la hoja:', SHEET_NAME);
+        const response = await fetch(SHEET_URL, { 
+          cache: 'no-store',
+          headers: { 
+            'Accept': 'text/csv, application/csv, text/plain'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        }
+        
+        const csvText = await response.text();
+        
+        // Verificar que no sea HTML (página de error o login)
+        if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
+          throw new Error(`La hoja "${SHEET_NAME}" no es pública o no existe. Por favor, comparte la hoja como "Cualquier persona con el enlace" con permiso de "Lector".`);
+        }
+        
+        if (!csvText || csvText.trim() === '') {
+          throw new Error(`La hoja "${SHEET_NAME}" está vacía.`);
+        }
+        
+        return csvText;
+      } catch (error) {
+        console.error("Error al obtener CSV:", error);
+        throw error;
+      }
+    }
+
+    function parseCSV(csv) {
+      // Dividir por saltos de línea, manejando posibles comillas
+      const lines = [];
+      let currentLine = '';
+      let insideQuotes = false;
+      
+      for (let i = 0; i < csv.length; i++) {
+        const char = csv[i];
+        if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === '\n' && !insideQuotes) {
+          lines.push(currentLine.trim());
+          currentLine = '';
+          continue;
+        }
+        currentLine += char;
+      }
+      if (currentLine.trim() !== '') {
+        lines.push(currentLine.trim());
+      }
+
+      if (lines.length < 2) {
+        console.warn('CSV con pocas líneas:', lines);
+        return [];
+      }
+
+      // Parsear cada línea respetando comillas
+      function parseLine(line) {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        values.push(current.trim());
+        return values;
+      }
+
+      const headerLine = lines[0];
+      const headers = parseLine(headerLine).map(h => h.replace(/^"|"$/g, '').trim());
+      
+      const data = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = parseLine(lines[i]);
+        if (values.length < headers.length) {
+          while (values.length < headers.length) values.push('');
+        }
+        const row = {};
+        headers.forEach((h, idx) => {
+          row[h] = values[idx] ? values[idx].replace(/^"|"$/g, '').trim() : '';
+        });
+        data.push(row);
+      }
+      
+      return data;
+    }
+
+    function ordenarParticipantes(data) {
+      if (!data || data.length === 0) return [];
+      
+      // Buscar las columnas correctas
+      const headers = Object.keys(data[0] || {});
+      const colParticipante = headers.find(h => /participante|nombre|jugador|participants/i.test(h)) || headers[0];
+      const colPuntos = headers.find(h => /puntos|puntaje|pts|points/i.test(h)) || headers[1];
+      const colAciertos = headers.find(h => /aciertos|aciert|hits/i.test(h)) || headers[2];
+      const colExactos = headers.find(h => /exactos|exact|precise/i.test(h)) || headers[3];
+      const colInscripcion = headers.find(h => /inscripcion|insc|order|registro/i.test(h)) || headers[4];
+
+      console.log('Columnas detectadas:', { colParticipante, colPuntos, colAciertos, colExactos, colInscripcion });
+
+      // Convertir a números
+      const participantes = data.map(row => {
+        const clean = (val) => {
+          if (typeof val === 'string') {
+            return val.replace(/^"|"$/g, '').trim();
+          }
+          return val;
+        };
+        
+        const nombre = clean(row[colParticipante]);
+        // Ignorar filas sin nombre o con nombre vacío
+        if (!nombre || nombre === '' || nombre === 'Participantes') return null;
+        
+        const puntos = parseFloat(clean(row[colPuntos]).replace(',', '.')) || 0;
+        const aciertos = parseFloat(clean(row[colAciertos]).replace(',', '.')) || 0;
+        const exactos = parseFloat(clean(row[colExactos]).replace(',', '.')) || 0;
+        const inscripcion = parseFloat(clean(row[colInscripcion]).replace(',', '.')) || 0;
+        
+        return {
+          nombre: nombre,
+          puntos,
+          aciertos,
+          exactos,
+          inscripcion
+        };
+      }).filter(p => p !== null);
+
+      // Ordenar: puntos desc, aciertos desc, exactos desc, inscripcion asc
+      participantes.sort((a, b) => {
+        if (a.puntos !== b.puntos) return b.puntos - a.puntos;
+        if (a.aciertos !== b.aciertos) return b.aciertos - a.aciertos;
+        if (a.exactos !== b.exactos) return b.exactos - a.exactos;
+        return a.inscripcion - b.inscripcion;
+      });
+
+      return participantes.slice(0, 11);
+    }
+
+    function renderizarTabla(participantes) {
+      const container = document.getElementById('tablaContainer');
+      if (!container) return;
+      
+      if (!participantes || participantes.length === 0) {
+        container.innerHTML = `<p style="padding: 20px; text-align: center; color: #64748b;">No se encontraron participantes en la hoja "${SHEET_NAME}". Verifica que los datos estén en el rango A1:E23.</p>`;
+        return;
+      }
+
+      let html = `<table class="tabla-posiciones">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Participantes</th>
+            <th class="col-center">Puntos</th>
+            <th class="col-center">Aciertos</th>
+            <th class="col-center">Exactos</th>
+            <th class="col-center">Inscripción</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      participantes.forEach((p, index) => {
+        const pos = index + 1;
+        let medalla = '';
+        if (pos === 1) medalla = '🥇 ';
+        else if (pos === 2) medalla = '🥈 ';
+        else if (pos === 3) medalla = '🥉 ';
+        html += `<tr>
+          <td><span class="num-pos">${medalla}${pos}</span></td>
+          <td class="participante">${p.nombre}</td>
+          <td class="col-center puntaje">${p.puntos}</td>
+          <td class="col-center">${p.aciertos}</td>
+          <td class="col-center">${p.exactos}</td>
+          <td class="col-center">${p.inscripcion}</td>
+        </tr>`;
+      });
+
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    // --------------------------------------------------------------
+    // 4. FLUJO PRINCIPAL Y PESTAÑAS
+    // --------------------------------------------------------------
+    async function cargarFixture() {
+      const estadoDiv = document.getElementById('estadoCargaFixture');
       const container = document.getElementById('bracketContainer');
       estadoDiv.textContent = '⏳ Cargando datos desde la API...';
       estadoDiv.className = 'estado-carga';
@@ -695,10 +868,7 @@
 
       try {
         const todos = await obtenerDatosAPI();
-        if (!todos || todos.length === 0) {
-          throw new Error('No se recibieron partidos de la API.');
-        }
-
+        if (!todos || todos.length === 0) throw new Error('No se recibieron partidos de la API.');
         const partidosPorTipo = organizarPartidos(todos);
         const totalKnockouts = Object.values(partidosPorTipo).reduce((sum, arr) => sum + arr.length, 0);
         estadoDiv.textContent = `✅ ${totalKnockouts} partidos de eliminación directa cargados.`;
@@ -713,12 +883,75 @@
           <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica tu conexión o intenta más tarde.</p>
           <button onclick="location.reload()" style="margin-top: 16px; border: 1px solid #991b1b; background: white; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600;">🔄 Intentar de nuevo</button>
         </div>`;
-        console.error("Error en inicializarYRenderizar:", error);
+        console.error("Error en cargarFixture:", error);
       }
     }
 
-    inicializarYRenderizar();
-    document.getElementById('btnRecargar').addEventListener('click', inicializarYRenderizar);
+    async function cargarTabla() {
+      const estadoDiv = document.getElementById('estadoCargaTabla');
+      const container = document.getElementById('tablaContainer');
+      estadoDiv.textContent = `⏳ Cargando datos desde la hoja "${SHEET_NAME}"...`;
+      estadoDiv.className = 'estado-carga';
+      container.innerHTML = '';
+
+      try {
+        const csv = await obtenerDatosTabla();
+        console.log('CSV obtenido (primeros 200 caracteres):', csv.substring(0, 200));
+        
+        const data = parseCSV(csv);
+        console.log('Datos parseados (cantidad de filas):', data.length);
+        
+        if (!data || data.length === 0) throw new Error(`No se encontraron datos en la hoja "${SHEET_NAME}".`);
+        
+        const top11 = ordenarParticipantes(data);
+        console.log('Top 11 ordenados:', top11);
+        
+        estadoDiv.textContent = `✅ ${top11.length} participantes cargados desde "${SHEET_NAME}" (Top 11).`;
+        estadoDiv.className = 'estado-carga exito';
+        renderizarTabla(top11);
+      } catch (error) {
+        estadoDiv.textContent = `❌ Error: ${error.message}`;
+        estadoDiv.className = 'estado-carga error';
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #991b1b; background: #fee2e2; border-radius: 8px; border: 1px solid #fecaca;">
+          <p style="font-weight: bold; font-size: 1.1rem;">⚠️ No se pudo cargar la tabla</p>
+          <p style="margin-top: 8px;">${error.message}</p>
+          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica que la hoja "${SHEET_NAME}" sea pública (Archivo > Compartir > Cualquier persona con el enlace) y que contenga datos en el rango A1:E23.</p>
+          <p style="margin-top: 8px; font-size: 0.8rem; color: #64748b;">URL de la hoja: <a href="https://docs.google.com/spreadsheets/d/1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM/edit?usp=sharing" target="_blank" style="color: #0047ab;">Abrir hoja</a></p>
+        </div>`;
+        console.error("Error en cargarTabla:", error);
+      }
+    }
+
+    // Inicializar todo
+    async function inicializarTodo() {
+      await Promise.all([cargarFixture(), cargarTabla()]);
+    }
+
+    // Mecanismo de pestañas
+    function setupTabs() {
+      const tabs = document.querySelectorAll('.tab-btn');
+      const panels = {
+        tabFixture: document.getElementById('tabFixture'),
+        tabTabla: document.getElementById('tabTabla')
+      };
+
+      tabs.forEach(btn => {
+        btn.addEventListener('click', function() {
+          tabs.forEach(b => b.classList.remove('activa'));
+          Object.values(panels).forEach(p => p.classList.remove('activo'));
+          this.classList.add('activa');
+          const target = this.dataset.tab;
+          if (panels[target]) panels[target].classList.add('activo');
+        });
+      });
+    }
+
+    // Recargar todo
+    document.getElementById('btnRecargar').addEventListener('click', inicializarTodo);
+
+    // Ejecutar
+    setupTabs();
+    inicializarTodo();
 
   })();
 </script>
