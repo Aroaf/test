@@ -577,7 +577,7 @@
 <script>
   (function() {
     // ================================================================
-    // 1. SISTEMA DE USUARIO Y VISITAS (INTEGRADO DESDE LA OTRA WEB)
+    // 1. SISTEMA DE USUARIO Y VISITAS (CON INVITADO REGISTRANDO VISITAS)
     // ================================================================
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-XI-wqSxdXUhDbRw0mGI_7vA29pfB92PY1KhqsyFFTmydCBQWY39ccQzo_6xWtbVTwg/exec';
     const STORAGE_KEY = 'usuario_actual_polla_mundial';
@@ -619,23 +619,30 @@
       });
     }
 
+    // MODIFICADO: Invitado ahora también registra visitas
     async function registrarVisita(participante) {
-      if (!participante || participante === 'Invitado') return;
+      // Si no hay participante, no hacemos nada
+      if (!participante) return;
+      
+      // Usamos el nombre tal cual (incluyendo "Invitado")
+      const nombreParaRegistro = participante;
+      
       try {
         await fetch(SCRIPT_URL, {
           method: 'POST',
           mode: 'no-cors',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ participante: participante })
+          body: JSON.stringify({ participante: nombreParaRegistro })
         });
-        console.log(`✅ Visita registrada para: ${participante}`);
+        console.log(`✅ Visita registrada para: ${nombreParaRegistro}`);
       } catch (err) {
         console.error('❌ Error al registrar visita:', err);
       }
     }
 
+    // MODIFICADO: Invitado ahora también consulta su contador de visitas
     async function obtenerVisitas(participante) {
-      if (!participante || participante === 'Invitado') return 0;
+      if (!participante) return 0;
       try {
         const url = `${SCRIPT_URL}?participante=${encodeURIComponent(participante)}`;
         const response = await fetch(url);
@@ -665,7 +672,7 @@
       `;
       container.appendChild(div);
 
-      // Cargar contador de visitas
+      // Cargar contador de visitas (también para Invitado)
       obtenerVisitas(nombre).then(visitas => {
         const span = document.getElementById('contadorValor');
         if (span) span.textContent = visitas;
