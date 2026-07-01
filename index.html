@@ -3,28 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5" />
-  <title>Mundial 2026 – Fixture y Tabla</title>
+  <title>Mundial 2026 – LuigiBET</title>
   <!-- Fuente moderna -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet" />
   <style>
-    /* ========== VARIABLES ========== */
+    /* ========== VARIABLES OSCURAS ========== */
     :root {
-      --fondo: #f1f5f9;
-      --tarjeta: #ffffff;
-      --texto-principal: #0f172a;
-      --texto-secundario: #475569;
-      --borde-suave: #e2e8f0;
-      --azul-profundo: #1e3a8a;
-      --azul-medio: #2563eb;
-      --verde-mundial: #0f7a46;
-      --oro: #caa64b;
-      --sombra: 0 8px 24px rgba(0, 0, 0, 0.06);
-      --sombra-fuerte: 0 16px 40px rgba(0, 0, 0, 0.08);
+      --fondo-base: #0b0e14;
+      --fondo-tarjeta: rgba(255, 255, 255, 0.04);
+      --fondo-tarjeta-hover: rgba(255, 255, 255, 0.07);
+      --borde-tarjeta: rgba(255, 255, 255, 0.06);
+      --texto-principal: #f0f2f5;
+      --texto-secundario: #94a3b8;
+      --texto-muted: #64748b;
+      --dorado: #f5b041;
+      --dorado-oscuro: #c68a2e;
+      --azul-bet: #2d7aff;
+      --verde-bet: #00e676;
+      --rojo-bet: #ff3d3d;
+      --sombra: 0 8px 32px rgba(0, 0, 0, 0.6);
       --radius: 16px;
       --radius-sm: 10px;
-      --transition: 0.2s ease;
+      --transition: 0.25s ease;
+      --glass: rgba(255, 255, 255, 0.03);
     }
 
     /* ========== RESET Y BASE ========== */
@@ -36,12 +39,14 @@
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--fondo);
+      background: var(--fondo-base);
       color: var(--texto-principal);
       padding: 16px 12px 40px;
       min-height: 100vh;
       display: flex;
       justify-content: center;
+      background-image: radial-gradient(circle at 20% 30%, rgba(245, 176, 65, 0.03), transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(45, 122, 255, 0.02), transparent 50%);
     }
 
     .contenedor {
@@ -52,52 +57,50 @@
 
     /* ========== HEADER ========== */
     .cabecera {
-      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--borde-tarjeta);
       border-radius: var(--radius);
       padding: 20px 24px;
       margin-bottom: 24px;
       box-shadow: var(--sombra);
-      border: 1px solid rgba(255, 255, 255, 0.7);
       position: relative;
       overflow: hidden;
     }
 
-    .cabecera::after {
+    .cabecera::before {
       content: '';
       position: absolute;
-      right: -40px;
-      top: -50px;
-      width: 180px;
-      height: 180px;
-      background: radial-gradient(circle, rgba(37, 99, 235, 0.06), transparent 70%);
-      border-radius: 50%;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(245, 176, 65, 0.05), transparent 60%);
       pointer-events: none;
     }
 
     .cabecera h1 {
-      font-size: clamp(1.5rem, 4vw, 2.2rem);
-      font-weight: 800;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 900;
       letter-spacing: -0.02em;
-      color: var(--azul-profundo);
-      margin-bottom: 2px;
+      background: linear-gradient(135deg, var(--dorado), var(--dorado-oscuro));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       flex-wrap: wrap;
     }
 
     .cabecera h1 span {
-      background: linear-gradient(135deg, var(--azul-medio), var(--verde-mundial));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      -webkit-text-fill-color: var(--texto-principal);
+      background: none;
     }
 
     .cabecera .subtitulo {
       color: var(--texto-secundario);
       font-size: 0.95rem;
       font-weight: 500;
-      margin-top: 0;
+      margin-top: 2px;
     }
 
     .cabecera .accion {
@@ -109,10 +112,10 @@
     }
 
     .btn-recargar {
-      background: var(--tarjeta);
-      border: 1px solid var(--borde-suave);
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--borde-tarjeta);
       border-radius: 999px;
-      padding: 8px 18px;
+      padding: 8px 20px;
       font-weight: 600;
       font-size: 0.85rem;
       color: var(--texto-principal);
@@ -121,14 +124,12 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+      backdrop-filter: blur(4px);
     }
     .btn-recargar:hover {
-      background: #f1f5f9;
-      border-color: #cbd5e1;
-    }
-    .btn-recargar:active {
-      transform: scale(0.97);
+      background: rgba(245, 176, 65, 0.12);
+      border-color: var(--dorado);
+      color: var(--dorado);
     }
 
     /* ========== USUARIO ========== */
@@ -137,46 +138,50 @@
       align-items: center;
       gap: 12px;
       flex-wrap: wrap;
-      background: #f1f5f9;
-      padding: 6px 16px 6px 18px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 16px 6px 20px;
       border-radius: 999px;
       font-size: 0.9rem;
       font-weight: 500;
       margin-top: 12px;
       width: fit-content;
+      border: 1px solid var(--borde-tarjeta);
+      backdrop-filter: blur(4px);
     }
     .usuario-actual .visitas {
-      color: var(--verde-mundial);
+      color: var(--verde-bet);
       font-weight: 600;
     }
     .usuario-actual .btn-cambiar {
       background: transparent;
       border: none;
-      color: var(--azul-medio);
+      color: var(--azul-bet);
       font-weight: 600;
       cursor: pointer;
       text-decoration: underline;
       font-size: 0.8rem;
     }
     .usuario-actual .btn-cambiar:hover {
-      color: var(--azul-profundo);
+      color: var(--dorado);
     }
 
     /* ========== TARJETAS (BLOQUES) ========== */
     .bloque {
-      background: var(--tarjeta);
+      background: var(--glass);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--borde-tarjeta);
       border-radius: var(--radius);
       padding: 18px 16px;
       margin-bottom: 18px;
       box-shadow: var(--sombra);
-      border: 1px solid rgba(255, 255, 255, 0.6);
       transition: var(--transition);
     }
 
     .bloque h2 {
       font-size: 1.05rem;
       font-weight: 700;
-      color: var(--azul-profundo);
+      color: var(--dorado);
       margin: 0 0 12px 0;
       display: flex;
       align-items: center;
@@ -184,12 +189,13 @@
     }
 
     .bloque h2 .badge {
-      background: #e0ecff;
+      background: rgba(245, 176, 65, 0.12);
       font-size: 0.65rem;
-      padding: 2px 10px;
+      padding: 2px 12px;
       border-radius: 999px;
       font-weight: 600;
-      color: var(--azul-medio);
+      color: var(--dorado);
+      border: 1px solid rgba(245, 176, 65, 0.2);
     }
 
     /* Colapsable */
@@ -203,7 +209,7 @@
       padding: 18px 20px;
       font-weight: 700;
       font-size: 1.05rem;
-      color: var(--azul-profundo);
+      color: var(--dorado);
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -219,17 +225,20 @@
       font-size: 0.7rem;
       font-weight: 600;
       color: var(--texto-principal);
-      background: #e2e8f0;
+      background: rgba(255, 255, 255, 0.08);
       padding: 3px 14px;
       border-radius: 999px;
       transition: var(--transition);
+      border: 1px solid var(--borde-tarjeta);
     }
     .bloque-colapsable[open] > summary::after {
       content: 'Ocultar';
-      background: #c7d2fe;
+      background: rgba(245, 176, 65, 0.15);
+      color: var(--dorado);
+      border-color: var(--dorado);
     }
     .bloque-colapsable[open] > summary {
-      border-bottom: 1px solid var(--borde-suave);
+      border-bottom: 1px solid var(--borde-tarjeta);
     }
     .bloque-colapsable .bloque-contenido {
       padding: 16px 20px 20px;
@@ -243,10 +252,10 @@
       gap: 12px;
       padding: 14px 18px;
       border-radius: var(--radius-sm);
-      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-      border-left: 4px solid var(--verde-mundial);
+      background: rgba(0, 230, 118, 0.04);
+      border-left: 4px solid var(--verde-bet);
       margin-bottom: 10px;
-      box-shadow: 0 2px 6px rgba(15, 122, 70, 0.06);
+      box-shadow: 0 2px 8px rgba(0, 230, 118, 0.04);
     }
     #widget-en-vivo .partido-vivo:last-child {
       margin-bottom: 0;
@@ -270,17 +279,17 @@
     .partido-vivo .marcador {
       font-size: 1.6rem;
       font-weight: 800;
-      color: var(--verde-mundial);
+      color: var(--verde-bet);
       letter-spacing: 2px;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
     }
     .partido-vivo .marcador .badge-vivo {
       font-size: 0.6rem;
       font-weight: 700;
-      background: var(--verde-mundial);
-      color: #fff;
+      background: var(--verde-bet);
+      color: #000;
       padding: 2px 10px;
       border-radius: 999px;
       letter-spacing: 0.3px;
@@ -288,13 +297,13 @@
     }
     @keyframes pulse-badge {
       0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.7; transform: scale(0.95); }
+      50% { opacity: 0.6; transform: scale(0.95); }
     }
     .partido-vivo img {
       width: 20px;
       height: 14px;
       border-radius: 2px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.5);
       object-fit: cover;
       flex-shrink: 0;
     }
@@ -340,22 +349,22 @@
       font-weight: 700;
       font-size: 0.7rem;
       text-align: center;
-      color: var(--azul-profundo);
-      background: #e0ecff;
+      color: var(--dorado);
+      background: rgba(245, 176, 65, 0.08);
       padding: 4px 8px;
       border-radius: 999px;
       margin-bottom: 10px;
-      letter-spacing: 0.3px;
-      white-space: nowrap;
+      letter-spacing: 0.5px;
       text-transform: uppercase;
+      border: 1px solid rgba(245, 176, 65, 0.1);
     }
 
     .partido {
-      background: #ffffff;
-      border: 1px solid var(--borde-suave);
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--borde-tarjeta);
       border-radius: var(--radius-sm);
       padding: 6px 10px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
       font-size: 0.7rem;
       display: flex;
       flex-direction: column;
@@ -364,14 +373,14 @@
       min-height: 44px;
     }
     .partido:hover {
-      background: #f8fafc;
-      border-color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(245, 176, 65, 0.2);
     }
 
     .partido-header {
       font-size: 0.55rem;
       font-weight: 600;
-      color: #94a3b8;
+      color: var(--texto-muted);
       letter-spacing: 0.2px;
       margin-bottom: 1px;
     }
@@ -394,47 +403,49 @@
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 100%;
+      color: var(--texto-secundario);
     }
     .equipo-nombre img {
       width: 18px;
       height: 12px;
       border-radius: 2px;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.5);
       flex-shrink: 0;
       object-fit: cover;
-      background: #f8fafc;
+      background: #1e293b;
     }
     .equipo-nombre.ganador {
       font-weight: 700;
-      color: var(--verde-mundial);
+      color: var(--verde-bet);
     }
 
     .equipo-resultado {
       font-weight: 600;
-      background: #e2e8f0;
+      background: rgba(255, 255, 255, 0.06);
       padding: 0 6px;
       border-radius: 4px;
       font-size: 0.7rem;
       min-width: 20px;
       text-align: center;
       flex-shrink: 0;
+      color: var(--texto-secundario);
     }
     .equipo-resultado.ganador {
-      background: var(--verde-mundial);
-      color: #fff;
+      background: var(--verde-bet);
+      color: #000;
     }
 
     .partido-sin-definir {
-      opacity: 0.4;
+      opacity: 0.3;
       justify-content: center;
       align-items: center;
-      color: #94a3b8;
+      color: var(--texto-muted);
       min-height: 44px;
       display: flex;
       font-size: 0.7rem;
     }
 
-    /* Líneas conectoras entre rondas (mejora visual) */
+    /* Líneas conectoras */
     .bracket .ronda:not(:last-child) .partido {
       position: relative;
     }
@@ -445,7 +456,7 @@
       top: 50%;
       width: 12px;
       height: 2px;
-      background: #cbd5e1;
+      background: rgba(255, 255, 255, 0.1);
       transform: translateY(-50%);
     }
     .bracket .ronda:not(:last-child)::after {
@@ -455,7 +466,7 @@
       top: 0;
       bottom: 0;
       width: 2px;
-      background: #cbd5e1;
+      background: rgba(255, 255, 255, 0.06);
     }
 
     @media (max-width: 700px) {
@@ -513,41 +524,42 @@
       font-size: 0.85rem;
       border-radius: var(--radius-sm);
       overflow: hidden;
-      border: 1px solid var(--borde-suave);
+      border: 1px solid var(--borde-tarjeta);
     }
     .tabla-posiciones th,
     .tabla-posiciones td {
-      border: 1px solid var(--borde-suave);
+      border: 1px solid var(--borde-tarjeta);
       text-align: center;
       font-weight: 600;
       padding: 8px 6px;
     }
     .tabla-posiciones th {
-      background: #f8fafc;
-      color: var(--azul-profundo);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--dorado);
       font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
     }
     .tabla-posiciones td.col-participante {
       text-align: left;
       font-weight: 700;
+      color: var(--texto-principal);
     }
     .posicion-celda {
       font-weight: 700;
       width: 36px;
     }
     .posicion-celda.clasifica {
-      background: #39d353;
-      color: #fff;
+      background: rgba(0, 230, 118, 0.2);
+      color: var(--verde-bet);
     }
     .posicion-celda.descalifica {
-      background: #ff4d4f;
-      color: #fff;
+      background: rgba(255, 61, 61, 0.15);
+      color: var(--rojo-bet);
     }
     .posicion-celda.honorifico {
-      background: #facc15;
-      color: #111827;
+      background: rgba(245, 176, 65, 0.15);
+      color: var(--dorado);
     }
 
     .leyenda-puntajes {
@@ -557,6 +569,7 @@
       margin-bottom: 12px;
       font-size: 0.75rem;
       font-weight: 600;
+      color: var(--texto-secundario);
     }
     .leyenda-chip {
       display: inline-flex;
@@ -567,7 +580,7 @@
       width: 14px;
       height: 14px;
       border-radius: 4px;
-      border: 1px solid #d1d5db;
+      border: 1px solid var(--borde-tarjeta);
       display: inline-block;
     }
 
@@ -581,29 +594,34 @@
     .filtros input,
     .filtros select,
     .filtros button {
-      border: 1px solid var(--borde-suave);
+      border: 1px solid var(--borde-tarjeta);
       border-radius: var(--radius-sm);
       padding: 8px 12px;
       font-size: 0.8rem;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--texto-principal);
       font-family: 'Inter', sans-serif;
       transition: var(--transition);
       width: 100%;
+      backdrop-filter: blur(4px);
+    }
+    .filtros input::placeholder {
+      color: var(--texto-muted);
     }
     .filtros input:focus,
     .filtros select:focus {
-      outline: 2px solid rgba(37, 99, 235, 0.15);
-      border-color: var(--azul-medio);
+      outline: 2px solid rgba(245, 176, 65, 0.2);
+      border-color: var(--dorado);
     }
     .filtros button {
-      background: var(--azul-medio);
-      color: #fff;
+      background: var(--dorado);
+      color: #000;
       border: none;
-      font-weight: 600;
+      font-weight: 700;
       cursor: pointer;
     }
     .filtros button:hover {
-      background: var(--azul-profundo);
+      background: var(--dorado-oscuro);
     }
     .filtros .full-width {
       grid-column: 1 / -1;
@@ -624,22 +642,22 @@
       font-size: 0.8rem;
       border-radius: var(--radius-sm);
       overflow: hidden;
-      border: 1px solid var(--borde-suave);
+      border: 1px solid var(--borde-tarjeta);
     }
     .tabla th,
     .tabla td {
-      border: 1px solid var(--borde-suave);
+      border: 1px solid var(--borde-tarjeta);
       padding: 8px 6px;
       text-align: left;
       white-space: nowrap;
     }
     .tabla th {
-      background: #f8fafc;
-      color: var(--azul-profundo);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--dorado);
       font-weight: 700;
       font-size: 0.7rem;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.5px;
       cursor: pointer;
       user-select: none;
       position: sticky;
@@ -649,15 +667,16 @@
     .tabla th.orden-activo::after {
       content: ' ▲';
       font-size: 0.7em;
+      color: var(--dorado);
     }
     .tabla th.orden-activo.orden-desc::after {
       content: ' ▼';
     }
     .tabla tbody tr:nth-child(even) {
-      background: #fafbfc;
+      background: rgba(255, 255, 255, 0.02);
     }
     .tabla tbody tr:hover {
-      background: #f1f5f9;
+      background: rgba(255, 255, 255, 0.05);
     }
 
     .estado {
@@ -667,29 +686,30 @@
       color: var(--texto-secundario);
     }
     .estado.error {
-      color: #b91c1c;
+      color: var(--rojo-bet);
     }
     .estado.exito {
-      color: var(--verde-mundial);
+      color: var(--verde-bet);
     }
 
     .estado-carga {
       font-size: 0.85rem;
       color: var(--texto-secundario);
       padding: 8px 12px;
-      background: #f1f5f9;
+      background: rgba(255, 255, 255, 0.03);
       border-radius: var(--radius-sm);
       margin-bottom: 12px;
+      border: 1px solid var(--borde-tarjeta);
     }
     .estado-carga.error {
-      background: #fee2e2;
-      color: #991b1b;
-      border: 1px solid #fecaca;
+      background: rgba(255, 61, 61, 0.08);
+      color: var(--rojo-bet);
+      border-color: rgba(255, 61, 61, 0.2);
     }
     .estado-carga.exito {
-      background: #dcfce7;
-      color: #166534;
-      border: 1px solid #bbf7d0;
+      background: rgba(0, 230, 118, 0.06);
+      color: var(--verde-bet);
+      border-color: rgba(0, 230, 118, 0.1);
     }
 
     /* ========== SECCIÓN RECLAMOS ========== */
@@ -697,16 +717,16 @@
       text-align: center;
       margin: 40px 0 24px;
       padding: 20px;
-      border-top: 2px solid var(--borde-suave);
+      border-top: 1px solid var(--borde-tarjeta);
     }
     .seccion-reclamos h2 {
-      color: var(--texto-principal);
-      font-size: 1.2rem;
+      color: var(--texto-secundario);
+      font-size: 1.1rem;
       margin-bottom: 8px;
     }
     .seccion-reclamos .btn-reclamo {
       display: inline-block;
-      background: var(--azul-medio);
+      background: var(--azul-bet);
       color: #fff;
       padding: 10px 28px;
       text-decoration: none;
@@ -715,19 +735,19 @@
       transition: var(--transition);
     }
     .seccion-reclamos .btn-reclamo:hover {
-      background: var(--azul-profundo);
+      background: #1a5fd0;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+      box-shadow: 0 6px 20px rgba(45, 122, 255, 0.25);
     }
 
     .pie {
       font-size: 0.7rem;
-      color: #94a3b8;
+      color: var(--texto-muted);
       text-align: center;
       margin: 20px 0 0;
     }
     .pie strong {
-      color: var(--texto-secundario);
+      color: var(--dorado);
     }
 
     /* ========== MODAL ========== */
@@ -737,8 +757,8 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(15, 23, 42, 0.5);
-      backdrop-filter: blur(6px);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -746,13 +766,14 @@
       padding: 20px;
     }
     .modal-content {
-      background: #fff;
+      background: #141a24;
       border-radius: var(--radius);
       padding: 32px 28px;
       width: 100%;
       max-width: 400px;
       text-align: center;
-      box-shadow: var(--sombra-fuerte);
+      box-shadow: var(--sombra);
+      border: 1px solid var(--borde-tarjeta);
       animation: modalIn 0.3s ease;
     }
     @keyframes modalIn {
@@ -761,7 +782,7 @@
     }
     .modal-content h2 {
       margin-top: 0;
-      color: var(--azul-profundo);
+      color: var(--dorado);
       font-size: 1.3rem;
     }
     .modal-content p {
@@ -772,15 +793,16 @@
       width: 100%;
       padding: 12px;
       border-radius: var(--radius-sm);
-      border: 1px solid var(--borde-suave);
+      border: 1px solid var(--borde-tarjeta);
       font-size: 1rem;
       margin-bottom: 18px;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--texto-principal);
       font-family: 'Inter', sans-serif;
     }
     .modal-content .btn-ingresar {
-      background: linear-gradient(135deg, var(--verde-mundial), #0c663a);
-      color: #fff;
+      background: linear-gradient(135deg, var(--dorado), var(--dorado-oscuro));
+      color: #000;
       border: none;
       padding: 12px;
       border-radius: var(--radius-sm);
@@ -791,12 +813,12 @@
       transition: var(--transition);
     }
     .modal-content .btn-ingresar:hover {
-      filter: brightness(1.06);
+      filter: brightness(1.1);
       transform: translateY(-1px);
     }
     .modal-content .nota {
       font-size: 0.7rem;
-      color: #94a3b8;
+      color: var(--texto-muted);
       margin-top: 18px;
     }
 
@@ -853,8 +875,8 @@
 <div class="contenedor">
 
   <header class="cabecera">
-    <h1>🏆 <span>Mundial 2026</span></h1>
-    <p class="subtitulo">Fixture • Tabla de posiciones • Apuestas en vivo</p>
+    <h1>🏆 <span>LuigiBET</span> · Mundial 2026</h1>
+    <p class="subtitulo">Fixture • Tabla • Apuestas en vivo</p>
     <div class="accion">
       <button class="btn-recargar" id="btnRecargar">🔄 Recargar</button>
     </div>
@@ -863,8 +885,8 @@
 
   <!-- ===== EN VIVO ===== -->
   <div class="bloque" id="bloque-en-vivo">
-    <h2>⚽ En vivo ahora</h2>
-    <div id="widget-en-vivo"><p style="color:#94a3b8; font-size:0.9rem;">Cargando...</p></div>
+    <h2>⚽ En vivo ahora <span class="badge">Live</span></h2>
+    <div id="widget-en-vivo"><p style="color:var(--texto-muted); font-size:0.9rem;">Cargando...</p></div>
   </div>
 
   <!-- ===== TABLA DE POSICIONES ===== -->
@@ -911,13 +933,13 @@
     <a href="https://www.fifa.com/es/contact" target="_blank" class="btn-reclamo">Ir a FIFA</a>
   </section>
 
-  <p class="pie"><strong>Aroa</strong> · Powered by <strong>LuigiBET (c)</strong></p>
+  <p class="pie"><strong>Aroa</strong> · Powered by <strong>LuigiBET</strong></p>
 </div>
 
 <script>
   (function() {
     // ================================================================
-    // 1. SISTEMA DE USUARIO Y VISITAS (sin cambios, solo se adapta)
+    // 1. SISTEMA DE USUARIO Y VISITAS (sin cambios funcionales)
     // ================================================================
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-XI-wqSxdXUhDbRw0mGI_7vA29pfB92PY1KhqsyFFTmydCBQWY39ccQzo_6xWtbVTwg/exec';
     const STORAGE_KEY = 'usuario_actual_polla_mundial';
@@ -1051,7 +1073,7 @@
     }
 
     // ================================================================
-    // 2. TRADUCCIONES Y BANDERAS
+    // 2. TRADUCCIONES Y BANDERAS (igual)
     // ================================================================
     const traducciones = {
       "Mexico": "México", "South Korea": "Corea del Sur", "Korea Republic": "Corea del Sur",
@@ -1102,7 +1124,7 @@
     }
 
     // ================================================================
-    // 3. FUNCIONES PARA EL FIXTURE
+    // 3. FUNCIONES PARA EL FIXTURE (igual)
     // ================================================================
     const API_URL = "https://worldcup26.ir/get/games";
 
@@ -1228,7 +1250,6 @@
         container.appendChild(columna);
       });
 
-      // Ajustar anchos
       function ajustarAnchos() {
         const columnas = container.querySelectorAll('.ronda');
         columnas.forEach(columna => {
@@ -1261,7 +1282,7 @@
     }
 
     // ================================================================
-    // 4. FUNCIONES PARA LA TABLA DE POSICIONES
+    // 4. FUNCIONES PARA LA TABLA DE POSICIONES (igual)
     // ================================================================
     const SHEET_ID = "1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM";
     const SHEET_NAME = "Tabla dinámica 6";
@@ -1373,13 +1394,13 @@
       const container = document.getElementById('tablaContainer');
       if (!container) return;
       if (!participantes || participantes.length === 0) {
-        container.innerHTML = `<p style="padding: 20px; text-align: center; color: #94a3b8;">No se encontraron participantes en la hoja "${SHEET_NAME}".</p>`;
+        container.innerHTML = `<p style="padding: 20px; text-align: center; color: var(--texto-muted);">No se encontraron participantes en la hoja "${SHEET_NAME}".</p>`;
         return;
       }
       let leyendaHtml = `
         <div class="leyenda-puntajes">
-          <span class="leyenda-chip"><span class="leyenda-color" style="background:#39d353;"></span> Clasifica 🏆</span>
-          <span class="leyenda-chip"><span class="leyenda-color" style="background:#ff4d4f;"></span> Descalificado 💀</span>
+          <span class="leyenda-chip"><span class="leyenda-color" style="background:#00e676;"></span> Clasifica 🏆</span>
+          <span class="leyenda-chip"><span class="leyenda-color" style="background:#ff3d3d;"></span> Descalificado 💀</span>
         </div>
       `;
       let html = leyendaHtml;
@@ -1403,7 +1424,7 @@
     }
 
     // ================================================================
-    // 5. WIDGET "EN VIVO AHORA"
+    // 5. WIDGET "EN VIVO AHORA" (igual, solo estilos)
     // ================================================================
     function obtenerPartidosEnVivo(todos) {
       const vivos = todos.filter(p => {
@@ -1419,7 +1440,7 @@
       if (!contenedor) return;
       const vivos = obtenerPartidosEnVivo(partidos);
       if (vivos.length === 0) {
-        contenedor.innerHTML = '<p style="color:#94a3b8; font-size:0.9rem; margin:0;">No hay partidos en vivo en este momento.</p>';
+        contenedor.innerHTML = '<p style="color:var(--texto-muted); font-size:0.9rem; margin:0;">No hay partidos en vivo en este momento.</p>';
         return;
       }
       let html = '';
@@ -1445,16 +1466,16 @@
       try {
         const todos = await obtenerDatosAPI();
         if (todos && todos.length > 0) renderWidgetEnVivo(todos);
-        else document.getElementById('widget-en-vivo').innerHTML = '<p style="color:#94a3b8; font-size:0.9rem;">No se encontraron partidos.</p>';
+        else document.getElementById('widget-en-vivo').innerHTML = '<p style="color:var(--texto-muted); font-size:0.9rem;">No se encontraron partidos.</p>';
       } catch (error) {
-        document.getElementById('widget-en-vivo').innerHTML = '<p style="color:#ef4444; font-size:0.9rem;">Error al cargar el marcador en vivo.</p>';
+        document.getElementById('widget-en-vivo').innerHTML = '<p style="color:var(--rojo-bet); font-size:0.9rem;">Error al cargar el marcador en vivo.</p>';
         console.error('Error en actualizarWidgetEnVivo:', error);
       }
     }
     setInterval(actualizarWidgetEnVivo, 30000);
 
     // ================================================================
-    // 6. DETALLE DE APUESTAS DESDE HOJA "Apuestas_16avos"
+    // 6. DETALLE DE APUESTAS (igual)
     // ================================================================
     const SHEET_APUESTAS = "Apuestas_16avos";
     const APUESTAS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_APUESTAS)}`;
@@ -1491,7 +1512,7 @@
       const container = document.getElementById('tablaApuestasContainer');
       const estado = document.getElementById('estadoFiltradoApuestas');
       if (!container) return;
-      container.innerHTML = '<p style="color:#94a3b8;">Cargando apuestas...</p>';
+      container.innerHTML = '<p style="color:var(--texto-muted);">Cargando apuestas...</p>';
       estado.textContent = '';
       estado.className = 'estado';
 
@@ -1513,7 +1534,7 @@
         estado.className = 'estado exito';
         configurarFiltrosApuestas();
       } catch (error) {
-        container.innerHTML = `<p style="color:#ef4444;">Error al cargar apuestas: ${error.message}</p>`;
+        container.innerHTML = `<p style="color:var(--rojo-bet);">Error al cargar apuestas: ${error.message}</p>`;
         estado.textContent = `❌ Error: ${error.message}`;
         estado.className = 'estado error';
         console.error('Error en cargarApuestas:', error);
@@ -1612,7 +1633,7 @@
       }
 
       if (datosFiltrados.length === 0) {
-        container.innerHTML = '<p style="padding:20px; text-align:center; color:#94a3b8;">No hay apuestas que coincidan con los filtros.</p>';
+        container.innerHTML = '<p style="padding:20px; text-align:center; color:var(--texto-muted);">No hay apuestas que coincidan con los filtros.</p>';
         return;
       }
 
@@ -1719,11 +1740,11 @@
       } catch (error) {
         estadoDiv.textContent = `❌ Error: ${error.message}`;
         estadoDiv.className = 'estado-carga error';
-        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #991b1b; background: #fee2e2; border-radius: var(--radius-sm); border: 1px solid #fecaca;">
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--rojo-bet); background: rgba(255,61,61,0.05); border-radius: var(--radius-sm); border: 1px solid rgba(255,61,61,0.15);">
           <p style="font-weight: bold; font-size: 1.1rem;">⚠️ No se pudieron cargar los datos</p>
           <p style="margin-top: 8px;">${error.message}</p>
-          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica tu conexión o intenta más tarde.</p>
-          <button onclick="location.reload()" style="margin-top: 16px; border: 1px solid #991b1b; background: white; padding: 8px 20px; border-radius: 999px; cursor: pointer; font-weight: 600;">🔄 Intentar de nuevo</button>
+          <p style="margin-top: 12px; font-size: 0.9rem; color: var(--texto-muted);">Verifica tu conexión o intenta más tarde.</p>
+          <button onclick="location.reload()" style="margin-top: 16px; border: 1px solid var(--dorado); background: transparent; color: var(--dorado); padding: 8px 20px; border-radius: 999px; cursor: pointer; font-weight: 600;">🔄 Intentar de nuevo</button>
         </div>`;
         console.error("Error en cargarFixture:", error);
       }
@@ -1747,10 +1768,10 @@
       } catch (error) {
         estadoDiv.textContent = `❌ Error: ${error.message}`;
         estadoDiv.className = 'estado-carga error';
-        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #991b1b; background: #fee2e2; border-radius: var(--radius-sm); border: 1px solid #fecaca;">
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: var(--rojo-bet); background: rgba(255,61,61,0.05); border-radius: var(--radius-sm); border: 1px solid rgba(255,61,61,0.15);">
           <p style="font-weight: bold; font-size: 1.1rem;">⚠️ No se pudo cargar la tabla</p>
           <p style="margin-top: 8px;">${error.message}</p>
-          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica que la hoja con los datos sea pública.</p>
+          <p style="margin-top: 12px; font-size: 0.9rem; color: var(--texto-muted);">Verifica que la hoja con los datos sea pública.</p>
         </div>`;
         console.error("Error en cargarTabla:", error);
       }
