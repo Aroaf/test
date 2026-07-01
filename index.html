@@ -1,1 +1,1775 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5" />
+  <title>Mundial 2026 – Fixture y Tabla</title>
+  <!-- Fuente moderna -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+  <style>
+    /* ========== VARIABLES ========== */
+    :root {
+      --fondo: #f1f5f9;
+      --tarjeta: #ffffff;
+      --texto-principal: #0f172a;
+      --texto-secundario: #475569;
+      --borde-suave: #e2e8f0;
+      --azul-profundo: #1e3a8a;
+      --azul-medio: #2563eb;
+      --verde-mundial: #0f7a46;
+      --oro: #caa64b;
+      --sombra: 0 8px 24px rgba(0, 0, 0, 0.06);
+      --sombra-fuerte: 0 16px 40px rgba(0, 0, 0, 0.08);
+      --radius: 16px;
+      --radius-sm: 10px;
+      --transition: 0.2s ease;
+    }
 
+    /* ========== RESET Y BASE ========== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--fondo);
+      color: var(--texto-principal);
+      padding: 16px 12px 40px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+
+    .contenedor {
+      max-width: 1280px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ========== HEADER ========== */
+    .cabecera {
+      background: linear-gradient(145deg, #ffffff, #f8fafc);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--sombra);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cabecera::after {
+      content: '';
+      position: absolute;
+      right: -40px;
+      top: -50px;
+      width: 180px;
+      height: 180px;
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.06), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .cabecera h1 {
+      font-size: clamp(1.5rem, 4vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--azul-profundo);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .cabecera h1 span {
+      background: linear-gradient(135deg, var(--azul-medio), var(--verde-mundial));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cabecera .subtitulo {
+      color: var(--texto-secundario);
+      font-size: 0.95rem;
+      font-weight: 500;
+      margin-top: 0;
+    }
+
+    .cabecera .accion {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn-recargar {
+      background: var(--tarjeta);
+      border: 1px solid var(--borde-suave);
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: var(--texto-principal);
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .btn-recargar:hover {
+      background: #f1f5f9;
+      border-color: #cbd5e1;
+    }
+    .btn-recargar:active {
+      transform: scale(0.97);
+    }
+
+    /* ========== USUARIO ========== */
+    .usuario-actual {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: #f1f5f9;
+      padding: 6px 16px 6px 18px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 12px;
+      width: fit-content;
+    }
+    .usuario-actual .visitas {
+      color: var(--verde-mundial);
+      font-weight: 600;
+    }
+    .usuario-actual .btn-cambiar {
+      background: transparent;
+      border: none;
+      color: var(--azul-medio);
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 0.8rem;
+    }
+    .usuario-actual .btn-cambiar:hover {
+      color: var(--azul-profundo);
+    }
+
+    /* ========== TARJETAS (BLOQUES) ========== */
+    .bloque {
+      background: var(--tarjeta);
+      border-radius: var(--radius);
+      padding: 18px 16px;
+      margin-bottom: 18px;
+      box-shadow: var(--sombra);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      transition: var(--transition);
+    }
+
+    .bloque h2 {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--azul-profundo);
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .bloque h2 .badge {
+      background: #e0ecff;
+      font-size: 0.65rem;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-weight: 600;
+      color: var(--azul-medio);
+    }
+
+    /* Colapsable */
+    .bloque-colapsable {
+      padding: 0;
+      overflow: hidden;
+    }
+    .bloque-colapsable > summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 18px 20px;
+      font-weight: 700;
+      font-size: 1.05rem;
+      color: var(--azul-profundo);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: var(--transition);
+      border-radius: var(--radius);
+    }
+    .bloque-colapsable > summary::-webkit-details-marker {
+      display: none;
+    }
+    .bloque-colapsable > summary::after {
+      content: 'Mostrar';
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--texto-principal);
+      background: #e2e8f0;
+      padding: 3px 14px;
+      border-radius: 999px;
+      transition: var(--transition);
+    }
+    .bloque-colapsable[open] > summary::after {
+      content: 'Ocultar';
+      background: #c7d2fe;
+    }
+    .bloque-colapsable[open] > summary {
+      border-bottom: 1px solid var(--borde-suave);
+    }
+    .bloque-colapsable .bloque-contenido {
+      padding: 16px 20px 20px;
+    }
+
+    /* ========== WIDGET EN VIVO ========== */
+    #widget-en-vivo .partido-vivo {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+      border-left: 4px solid var(--verde-mundial);
+      margin-bottom: 10px;
+      box-shadow: 0 2px 6px rgba(15, 122, 70, 0.06);
+    }
+    #widget-en-vivo .partido-vivo:last-child {
+      margin-bottom: 0;
+    }
+    .partido-vivo .equipo-vivo {
+      font-weight: 600;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .partido-vivo .equipo-vivo.local {
+      justify-content: flex-end;
+      text-align: right;
+    }
+    .partido-vivo .equipo-vivo.visita {
+      justify-content: flex-start;
+      text-align: left;
+    }
+    .partido-vivo .marcador {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--verde-mundial);
+      letter-spacing: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .partido-vivo .marcador .badge-vivo {
+      font-size: 0.6rem;
+      font-weight: 700;
+      background: var(--verde-mundial);
+      color: #fff;
+      padding: 2px 10px;
+      border-radius: 999px;
+      letter-spacing: 0.3px;
+      animation: pulse-badge 1.8s ease-in-out infinite;
+    }
+    @keyframes pulse-badge {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.7; transform: scale(0.95); }
+    }
+    .partido-vivo img {
+      width: 20px;
+      height: 14px;
+      border-radius: 2px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 500px) {
+      .partido-vivo {
+        grid-template-columns: 1fr auto 1fr;
+        gap: 6px;
+        padding: 12px 12px;
+      }
+      .partido-vivo .equipo-vivo {
+        font-size: 0.8rem;
+      }
+      .partido-vivo .marcador {
+        font-size: 1.2rem;
+      }
+      .partido-vivo img {
+        width: 16px;
+        height: 11px;
+      }
+    }
+
+    /* ========== BRACKET ========== */
+    .bracket {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0 4px;
+      overflow-x: auto;
+      align-items: stretch;
+    }
+
+    .ronda {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      gap: 6px;
+      flex: 0 0 auto;
+      min-width: 150px;
+      position: relative;
+    }
+
+    .ronda-titulo {
+      font-weight: 700;
+      font-size: 0.7rem;
+      text-align: center;
+      color: var(--azul-profundo);
+      background: #e0ecff;
+      padding: 4px 8px;
+      border-radius: 999px;
+      margin-bottom: 10px;
+      letter-spacing: 0.3px;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .partido {
+      background: #ffffff;
+      border: 1px solid var(--borde-suave);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      font-size: 0.7rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: var(--transition);
+      min-height: 44px;
+    }
+    .partido:hover {
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .partido-header {
+      font-size: 0.55rem;
+      font-weight: 600;
+      color: #94a3b8;
+      letter-spacing: 0.2px;
+      margin-bottom: 1px;
+    }
+
+    .equipo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1px 0;
+      line-height: 1.3;
+      gap: 4px;
+    }
+
+    .equipo-nombre {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+    .equipo-nombre img {
+      width: 18px;
+      height: 12px;
+      border-radius: 2px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+      object-fit: cover;
+      background: #f8fafc;
+    }
+    .equipo-nombre.ganador {
+      font-weight: 700;
+      color: var(--verde-mundial);
+    }
+
+    .equipo-resultado {
+      font-weight: 600;
+      background: #e2e8f0;
+      padding: 0 6px;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      min-width: 20px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+    .equipo-resultado.ganador {
+      background: var(--verde-mundial);
+      color: #fff;
+    }
+
+    .partido-sin-definir {
+      opacity: 0.4;
+      justify-content: center;
+      align-items: center;
+      color: #94a3b8;
+      min-height: 44px;
+      display: flex;
+      font-size: 0.7rem;
+    }
+
+    /* Líneas conectoras entre rondas (mejora visual) */
+    .bracket .ronda:not(:last-child) .partido {
+      position: relative;
+    }
+    .bracket .ronda:not(:last-child) .partido::after {
+      content: '';
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      width: 12px;
+      height: 2px;
+      background: #cbd5e1;
+      transform: translateY(-50%);
+    }
+    .bracket .ronda:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      right: -6px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: #cbd5e1;
+    }
+
+    @media (max-width: 700px) {
+      .bracket .ronda {
+        min-width: 120px;
+      }
+      .equipo-nombre img {
+        width: 14px;
+        height: 10px;
+      }
+      .equipo-resultado {
+        font-size: 0.6rem;
+        min-width: 16px;
+      }
+      .partido {
+        padding: 4px 6px;
+        min-height: 34px;
+        font-size: 0.65rem;
+      }
+      .bracket .ronda:not(:last-child) .partido::after {
+        right: -8px;
+        width: 8px;
+      }
+      .bracket .ronda:not(:last-child)::after {
+        right: -4px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .bracket {
+        gap: 6px;
+        padding: 8px 0;
+      }
+      .ronda {
+        min-width: 90px;
+      }
+      .ronda-titulo {
+        font-size: 0.55rem;
+        padding: 2px 6px;
+      }
+      .equipo-nombre {
+        font-size: 0.6rem;
+      }
+      .equipo-resultado {
+        font-size: 0.5rem;
+        min-width: 14px;
+        padding: 0 3px;
+      }
+    }
+
+    /* ========== TABLA DE POSICIONES ========== */
+    .tabla-posiciones {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--borde-suave);
+    }
+    .tabla-posiciones th,
+    .tabla-posiciones td {
+      border: 1px solid var(--borde-suave);
+      text-align: center;
+      font-weight: 600;
+      padding: 8px 6px;
+    }
+    .tabla-posiciones th {
+      background: #f8fafc;
+      color: var(--azul-profundo);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .tabla-posiciones td.col-participante {
+      text-align: left;
+      font-weight: 700;
+    }
+    .posicion-celda {
+      font-weight: 700;
+      width: 36px;
+    }
+    .posicion-celda.clasifica {
+      background: #39d353;
+      color: #fff;
+    }
+    .posicion-celda.descalifica {
+      background: #ff4d4f;
+      color: #fff;
+    }
+    .posicion-celda.honorifico {
+      background: #facc15;
+      color: #111827;
+    }
+
+    .leyenda-puntajes {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .leyenda-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .leyenda-color {
+      width: 14px;
+      height: 14px;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      display: inline-block;
+    }
+
+    /* ========== TABLA DE APUESTAS ========== */
+    .filtros {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .filtros input,
+    .filtros select,
+    .filtros button {
+      border: 1px solid var(--borde-suave);
+      border-radius: var(--radius-sm);
+      padding: 8px 12px;
+      font-size: 0.8rem;
+      background: #fff;
+      font-family: 'Inter', sans-serif;
+      transition: var(--transition);
+      width: 100%;
+    }
+    .filtros input:focus,
+    .filtros select:focus {
+      outline: 2px solid rgba(37, 99, 235, 0.15);
+      border-color: var(--azul-medio);
+    }
+    .filtros button {
+      background: var(--azul-medio);
+      color: #fff;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .filtros button:hover {
+      background: var(--azul-profundo);
+    }
+    .filtros .full-width {
+      grid-column: 1 / -1;
+    }
+
+    @media (max-width: 600px) {
+      .filtros {
+        grid-template-columns: 1fr;
+      }
+      .filtros .full-width {
+        grid-column: 1;
+      }
+    }
+
+    .tabla {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      border: 1px solid var(--borde-suave);
+    }
+    .tabla th,
+    .tabla td {
+      border: 1px solid var(--borde-suave);
+      padding: 8px 6px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .tabla th {
+      background: #f8fafc;
+      color: var(--azul-profundo);
+      font-weight: 700;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      cursor: pointer;
+      user-select: none;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .tabla th.orden-activo::after {
+      content: ' ▲';
+      font-size: 0.7em;
+    }
+    .tabla th.orden-activo.orden-desc::after {
+      content: ' ▼';
+    }
+    .tabla tbody tr:nth-child(even) {
+      background: #fafbfc;
+    }
+    .tabla tbody tr:hover {
+      background: #f1f5f9;
+    }
+
+    .estado {
+      margin-top: 10px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--texto-secundario);
+    }
+    .estado.error {
+      color: #b91c1c;
+    }
+    .estado.exito {
+      color: var(--verde-mundial);
+    }
+
+    .estado-carga {
+      font-size: 0.85rem;
+      color: var(--texto-secundario);
+      padding: 8px 12px;
+      background: #f1f5f9;
+      border-radius: var(--radius-sm);
+      margin-bottom: 12px;
+    }
+    .estado-carga.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #fecaca;
+    }
+    .estado-carga.exito {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    /* ========== SECCIÓN RECLAMOS ========== */
+    .seccion-reclamos {
+      text-align: center;
+      margin: 40px 0 24px;
+      padding: 20px;
+      border-top: 2px solid var(--borde-suave);
+    }
+    .seccion-reclamos h2 {
+      color: var(--texto-principal);
+      font-size: 1.2rem;
+      margin-bottom: 8px;
+    }
+    .seccion-reclamos .btn-reclamo {
+      display: inline-block;
+      background: var(--azul-medio);
+      color: #fff;
+      padding: 10px 28px;
+      text-decoration: none;
+      border-radius: 999px;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+    .seccion-reclamos .btn-reclamo:hover {
+      background: var(--azul-profundo);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+
+    .pie {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      text-align: center;
+      margin: 20px 0 0;
+    }
+    .pie strong {
+      color: var(--texto-secundario);
+    }
+
+    /* ========== MODAL ========== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+      box-shadow: var(--sombra-fuerte);
+      animation: modalIn 0.3s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .modal-content h2 {
+      margin-top: 0;
+      color: var(--azul-profundo);
+      font-size: 1.3rem;
+    }
+    .modal-content p {
+      color: var(--texto-secundario);
+      margin: 8px 0 16px;
+    }
+    .modal-content select {
+      width: 100%;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--borde-suave);
+      font-size: 1rem;
+      margin-bottom: 18px;
+      background: #fff;
+      font-family: 'Inter', sans-serif;
+    }
+    .modal-content .btn-ingresar {
+      background: linear-gradient(135deg, var(--verde-mundial), #0c663a);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: var(--radius-sm);
+      font-weight: 700;
+      cursor: pointer;
+      width: 100%;
+      font-size: 1rem;
+      transition: var(--transition);
+    }
+    .modal-content .btn-ingresar:hover {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+    }
+    .modal-content .nota {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      margin-top: 18px;
+    }
+
+    /* ========== RESPONSIVE GENERAL ========== */
+    @media (max-width: 600px) {
+      body {
+        padding: 10px 8px 30px;
+      }
+      .cabecera {
+        padding: 16px;
+      }
+      .bloque {
+        padding: 14px 12px;
+      }
+      .tabla-posiciones {
+        font-size: 0.7rem;
+      }
+      .tabla-posiciones th,
+      .tabla-posiciones td {
+        padding: 6px 4px;
+      }
+      .tabla {
+        font-size: 0.7rem;
+      }
+      .tabla th,
+      .tabla td {
+        padding: 6px 4px;
+        white-space: normal;
+        word-break: break-word;
+      }
+      .usuario-actual {
+        font-size: 0.8rem;
+        padding: 4px 12px;
+      }
+    }
+
+    @media (max-width: 400px) {
+      .cabecera h1 {
+        font-size: 1.2rem;
+      }
+      .cabecera .subtitulo {
+        font-size: 0.8rem;
+      }
+    }
+
+    /* Scroll suave para tablas en móvil */
+    .bloque {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+  </style>
+</head>
+<body>
+<div class="contenedor">
+
+  <header class="cabecera">
+    <h1>🏆 <span>Mundial 2026</span></h1>
+    <p class="subtitulo">Fixture • Tabla de posiciones • Apuestas en vivo</p>
+    <div class="accion">
+      <button class="btn-recargar" id="btnRecargar">🔄 Recargar</button>
+    </div>
+    <div id="usuarioContainer"></div>
+  </header>
+
+  <!-- ===== EN VIVO ===== -->
+  <div class="bloque" id="bloque-en-vivo">
+    <h2>⚽ En vivo ahora</h2>
+    <div id="widget-en-vivo"><p style="color:#94a3b8; font-size:0.9rem;">Cargando...</p></div>
+  </div>
+
+  <!-- ===== TABLA DE POSICIONES ===== -->
+  <div class="bloque" id="bloque-tabla">
+    <h2>🏅 Tabla de Posiciones <span class="badge">Top 11</span></h2>
+    <div id="estadoCargaTabla" class="estado-carga">Cargando datos desde Google Sheets...</div>
+    <div id="tablaContainer"></div>
+  </div>
+
+  <!-- ===== BRACKET ===== -->
+  <details class="bloque bloque-colapsable" id="bloqueFixture">
+    <summary>📋 Cuadro del torneo <span class="badge">Eliminación directa</span></summary>
+    <div class="bloque-contenido">
+      <div id="estadoCargaFixture" class="estado-carga">Cargando datos desde la API...</div>
+      <div id="bracketContainer" class="bracket"></div>
+    </div>
+  </details>
+
+  <!-- ===== APUESTAS ===== -->
+  <details class="bloque bloque-colapsable" id="bloqueDetalleApuestas">
+    <summary>🤑 Detalle completo de apuestas</summary>
+    <div class="bloque-contenido">
+      <div class="filtros">
+        <input id="filtroTextoApuestas" type="text" placeholder="Buscar..." class="full-width" />
+        <select id="filtroParticipanteApuestas">
+          <option value="todos">Todos los participantes</option>
+        </select>
+        <select id="filtroRondaApuestas">
+          <option value="todos">Todas las rondas</option>
+        </select>
+        <select id="filtroPartidoApuestas">
+          <option value="todos">Todos los partidos</option>
+        </select>
+        <button id="limpiarFiltrosApuestas" type="button">Limpiar filtros</button>
+      </div>
+      <div class="estado" id="estadoFiltradoApuestas"></div>
+      <div id="tablaApuestasContainer"></div>
+    </div>
+  </details>
+
+  <!-- ===== RECLAMOS ===== -->
+  <section class="seccion-reclamos">
+    <h2>¿Tienes algún reclamo?</h2>
+    <a href="https://www.fifa.com/es/contact" target="_blank" class="btn-reclamo">Ir a FIFA</a>
+  </section>
+
+  <p class="pie"><strong>Aroa</strong> · Powered by <strong>LuigiBET (c)</strong></p>
+</div>
+
+<script>
+  (function() {
+    // ================================================================
+    // 1. SISTEMA DE USUARIO Y VISITAS (sin cambios, solo se adapta)
+    // ================================================================
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz-XI-wqSxdXUhDbRw0mGI_7vA29pfB92PY1KhqsyFFTmydCBQWY39ccQzo_6xWtbVTwg/exec';
+    const STORAGE_KEY = 'usuario_actual_polla_mundial';
+
+    const LISTA_PARTICIPANTES = [
+      'Invitado',
+      'Ariel', 'Camilo', 'Carito', 'Claudio Padilla', 'Daniela',
+      'Diego Toledo', 'Felipe Bustos', 'Felipe HD', 'Grace', 'Karen Garrido',
+      'Lando', 'Leo', 'Marcelitocuerdas', 'Marrosquino', 'María Isabel',
+      'Miry', 'Pablo Meliqueo', 'Papasote ALV', 'Rocio', 'Rodrigo Arriaza',
+      'Sergio Luigi', 'Stuart'
+    ];
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+      });
+    }
+
+    async function registrarVisita(participante) {
+      if (!participante) return;
+      try {
+        await fetch(SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ participante: participante })
+        });
+        console.log(`✅ Visita registrada para: ${participante}`);
+      } catch (err) {
+        console.error('❌ Error al registrar visita:', err);
+      }
+    }
+
+    async function obtenerVisitas(participante) {
+      if (!participante) return 0;
+      try {
+        const url = `${SCRIPT_URL}?participante=${encodeURIComponent(participante)}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.visitas || 0;
+      } catch (err) {
+        console.error('Error al obtener visitas:', err);
+        return 0;
+      }
+    }
+
+    function mostrarUsuarioActual(nombre) {
+      const container = document.getElementById('usuarioContainer');
+      if (!container) return;
+      container.innerHTML = '';
+      if (!nombre) return;
+
+      const div = document.createElement('div');
+      div.className = 'usuario-actual';
+      div.innerHTML = `
+        <span>👤 <strong>${escapeHtml(nombre)}</strong></span>
+        <span class="visitas">👁️ ${'<span id="contadorValor">--</span>'}</span>
+        <button class="btn-cambiar" id="btnCambiarUsuario">Cambiar</button>
+      `;
+      container.appendChild(div);
+
+      obtenerVisitas(nombre).then(visitas => {
+        const span = document.getElementById('contadorValor');
+        if (span) span.textContent = visitas;
+      });
+
+      document.getElementById('btnCambiarUsuario')?.addEventListener('click', () => {
+        localStorage.removeItem(STORAGE_KEY);
+        mostrarModal();
+        container.innerHTML = '';
+      });
+    }
+
+    function mostrarModal() {
+      if (document.getElementById('modalLogin')) return;
+
+      const modal = document.createElement('div');
+      modal.id = 'modalLogin';
+      modal.className = 'modal-overlay';
+
+      modal.innerHTML = `
+        <div class="modal-content">
+          <h2>👋 Bienvenido a LuigiBET 2026</h2>
+          <p>Selecciona tu nombre para continuar:</p>
+          <select id="selectUsuario">
+            <option value="">-- Elige tu usuario --</option>
+            ${LISTA_PARTICIPANTES.map(p => `<option value="${p.replace(/"/g, '&quot;')}">${p}</option>`).join('')}
+          </select>
+          <button class="btn-ingresar" id="btnConfirmarUsuario">Ingresar</button>
+          <p class="nota">* Tus apuestas se mantendrán asociadas a este nombre.</p>
+        </div>
+      `;
+
+      document.body.appendChild(modal);
+
+      const btnConfirmar = document.getElementById('btnConfirmarUsuario');
+      const selectUsuario = document.getElementById('selectUsuario');
+
+      const seleccionar = async () => {
+        const nombre = selectUsuario.value;
+        if (nombre) {
+          localStorage.setItem(STORAGE_KEY, nombre);
+          await registrarVisita(nombre);
+          modal.remove();
+          mostrarUsuarioActual(nombre);
+        } else {
+          alert('Por favor selecciona un participante.');
+        }
+      };
+
+      btnConfirmar.addEventListener('click', seleccionar);
+      selectUsuario.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') seleccionar();
+      });
+    }
+
+    function iniciarSistemaUsuario() {
+      const usuarioGuardado = localStorage.getItem(STORAGE_KEY);
+      if (usuarioGuardado && LISTA_PARTICIPANTES.includes(usuarioGuardado)) {
+        mostrarUsuarioActual(usuarioGuardado);
+        registrarVisita(usuarioGuardado);
+      } else {
+        if (usuarioGuardado) localStorage.removeItem(STORAGE_KEY);
+        mostrarModal();
+      }
+    }
+
+    // ================================================================
+    // 2. TRADUCCIONES Y BANDERAS
+    // ================================================================
+    const traducciones = {
+      "Mexico": "México", "South Korea": "Corea del Sur", "Korea Republic": "Corea del Sur",
+      "Czech Republic": "Chequia", "Czechia": "Chequia", "South Africa": "Sudáfrica",
+      "Canada": "Canadá", "Qatar": "Catar", "Switzerland": "Suiza",
+      "Bosnia and Herzegovina": "Bosnia H.", "Bosnia": "Bosnia H.",
+      "Brazil": "Brasil", "Haiti": "Haití", "Scotland": "Escocia",
+      "Morocco": "Marruecos", "United States": "Estados Unidos", "USA": "Estados Unidos",
+      "Australia": "Australia", "Turkey": "Turquía", "Paraguay": "Paraguay",
+      "Germany": "Alemania", "Ivory Coast": "Costa de Marfil", "Côte d'Ivoire": "Costa de Marfil",
+      "Ecuador": "Ecuador", "Curaçao": "Curazao", "Netherlands": "Países Bajos",
+      "Sweden": "Suecia", "Tunisia": "Túnez", "Japan": "Japón",
+      "Iran": "Irán", "Belgium": "Bélgica", "New Zealand": "Nueva Zelanda",
+      "Egypt": "Egipto", "Saudi Arabia": "Arabia Saudita", "Spain": "España",
+      "Uruguay": "Uruguay", "Cape Verde": "Cabo Verde", "Iraq": "Irak",
+      "France": "Francia", "Norway": "Noruega", "Senegal": "Senegal",
+      "Austria": "Austria", "Argentina": "Argentina", "Jordan": "Jordania",
+      "Algeria": "Argelia", "Uzbekistan": "Uzbekistán", "Portugal": "Portugal",
+      "Colombia": "Colombia", "Congo DR": "R.D. del Congo",
+      "Democratic Republic of the Congo": "R.D. del Congo",
+      "Ghana": "Ghana", "England": "Inglaterra", "Panama": "Panamá",
+      "Croatia": "Croacia"
+    };
+
+    const BANDERAS = {
+      "México": "mx", "Sudáfrica": "za", "Corea del Sur": "kr", "Chequia": "cz",
+      "Canadá": "ca", "Bosnia H.": "ba", "Catar": "qa", "Suiza": "ch",
+      "Brasil": "br", "Marruecos": "ma", "Haití": "ht", "Escocia": "gb-sct",
+      "Estados Unidos": "us", "Paraguay": "py", "Australia": "au", "Turquía": "tr",
+      "Alemania": "de", "Curazao": "cw", "Costa de Marfil": "ci", "Ecuador": "ec",
+      "Países Bajos": "nl", "Japón": "jp", "Suecia": "se", "Túnez": "tn",
+      "Irán": "ir", "Nueva Zelanda": "nz", "Bélgica": "be", "Egipto": "eg",
+      "Arabia Saudita": "sa", "Uruguay": "uy", "España": "es", "Cabo Verde": "cv",
+      "Irak": "iq", "Noruega": "no", "Francia": "fr", "Senegal": "sn",
+      "Austria": "at", "Jordania": "jo", "Argentina": "ar", "Argelia": "dz",
+      "Uzbekistán": "uz", "Colombia": "co", "Portugal": "pt", "R.D. del Congo": "cd",
+      "Ghana": "gh", "Panamá": "pa", "Inglaterra": "gb-eng", "Croacia": "hr"
+    };
+
+    function obtenerHtmlConBandera(nombrePais) {
+      if (!nombrePais) return '';
+      const paisLimpio = nombrePais.trim();
+      const codigo = BANDERAS[paisLimpio];
+      if (codigo) {
+        return `<img src="https://flagcdn.com/16x12/${codigo}.png" alt="Bandera de ${paisLimpio}" onerror="this.style.display='none'">`;
+      }
+      return '';
+    }
+
+    // ================================================================
+    // 3. FUNCIONES PARA EL FIXTURE
+    // ================================================================
+    const API_URL = "https://worldcup26.ir/get/games";
+
+    async function obtenerDatosAPI() {
+      try {
+        const respuesta = await fetch(API_URL, { cache: 'no-store', headers: { 'Accept': 'application/json' } });
+        if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status} - ${respuesta.statusText}`);
+        const data = await respuesta.json();
+        return data.games || [];
+      } catch (error) {
+        console.error("Error al obtener datos de la API:", error);
+        throw new Error("No se pudieron obtener los datos de la API: " + error.message);
+      }
+    }
+
+    function organizarPartidos(todos) {
+      const tiposKnockout = ['r32', 'r16', 'qf'];
+      const knockouts = todos.filter(p => tiposKnockout.includes(p.type));
+      const porTipo = {};
+      knockouts.forEach(p => {
+        if (!porTipo[p.type]) porTipo[p.type] = [];
+        porTipo[p.type].push(p);
+      });
+      const ordenTipos = ['r32', 'r16', 'qf'];
+      const resultado = {};
+      ordenTipos.forEach(tipo => {
+        if (porTipo[tipo]) {
+          porTipo[tipo].sort((a, b) => Number(a.id) - Number(b.id));
+          resultado[tipo] = porTipo[tipo];
+        } else {
+          resultado[tipo] = [];
+        }
+      });
+      return resultado;
+    }
+
+    function renderizarBracket(partidosPorTipo) {
+      const container = document.getElementById('bracketContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const titulos = { 'r32': '16avos', 'r16': 'Octavos', 'qf': 'Cuartos' };
+      const tipos = ['r32', 'r16', 'qf'];
+
+      tipos.forEach((tipo) => {
+        const partidos = partidosPorTipo[tipo] || [];
+        const columna = document.createElement('div');
+        columna.className = 'ronda';
+        columna.dataset.tipo = tipo;
+
+        const titulo = document.createElement('div');
+        titulo.className = 'ronda-titulo';
+        titulo.textContent = titulos[tipo] || tipo.toUpperCase();
+        columna.appendChild(titulo);
+
+        if (partidos.length === 0) {
+          const vacio = document.createElement('div');
+          vacio.className = 'partido partido-sin-definir';
+          vacio.textContent = 'Sin definir';
+          columna.appendChild(vacio);
+          container.appendChild(columna);
+          return;
+        }
+
+        partidos.forEach(p => {
+          const div = document.createElement('div');
+          div.className = 'partido';
+
+          const localIng = p.home_team_name_en || p.home_team_label || 'TBD';
+          const visitaIng = p.away_team_name_en || p.away_team_label || 'TBD';
+          const local = traducciones[localIng] || localIng;
+          const visita = traducciones[visitaIng] || visitaIng;
+
+          const golesL = (p.home_score !== undefined && p.home_score !== null && p.home_score !== '') ? p.home_score : '–';
+          const golesV = (p.away_score !== undefined && p.away_score !== null && p.away_score !== '') ? p.away_score : '–';
+
+          let ganador = null;
+          if (p.finished === 'TRUE' || p.finished === true) {
+            const numL = Number(golesL);
+            const numV = Number(golesV);
+            if (!isNaN(numL) && !isNaN(numV) && numL !== numV) {
+              ganador = numL > numV ? 'local' : 'visita';
+            }
+          }
+
+          const esGanadorLocal = ganador === 'local';
+          const esGanadorVisita = ganador === 'visita';
+
+          const header = document.createElement('div');
+          header.className = 'partido-header';
+          header.textContent = `M${p.id}`;
+          div.appendChild(header);
+
+          const eqLocal = document.createElement('div');
+          eqLocal.className = 'equipo';
+          const nombreLocal = document.createElement('span');
+          nombreLocal.className = `equipo-nombre ${esGanadorLocal ? 'ganador' : ''}`;
+          const banderaHtmlLocal = obtenerHtmlConBandera(local);
+          nombreLocal.innerHTML = `${banderaHtmlLocal} ${local}`;
+          const resLocal = document.createElement('span');
+          resLocal.className = `equipo-resultado ${esGanadorLocal ? 'ganador' : ''}`;
+          resLocal.textContent = golesL;
+          eqLocal.appendChild(nombreLocal);
+          eqLocal.appendChild(resLocal);
+          div.appendChild(eqLocal);
+
+          const eqVisita = document.createElement('div');
+          eqVisita.className = 'equipo';
+          const nombreVisita = document.createElement('span');
+          nombreVisita.className = `equipo-nombre ${esGanadorVisita ? 'ganador' : ''}`;
+          const banderaHtmlVisita = obtenerHtmlConBandera(visita);
+          nombreVisita.innerHTML = `${banderaHtmlVisita} ${visita}`;
+          const resVisita = document.createElement('span');
+          resVisita.className = `equipo-resultado ${esGanadorVisita ? 'ganador' : ''}`;
+          resVisita.textContent = golesV;
+          eqVisita.appendChild(nombreVisita);
+          eqVisita.appendChild(resVisita);
+          div.appendChild(eqVisita);
+
+          columna.appendChild(div);
+        });
+
+        container.appendChild(columna);
+      });
+
+      // Ajustar anchos
+      function ajustarAnchos() {
+        const columnas = container.querySelectorAll('.ronda');
+        columnas.forEach(columna => {
+          const partidos = columna.querySelectorAll('.partido');
+          if (partidos.length === 0) return;
+          let maxPartidoWidth = 0;
+          partidos.forEach(p => {
+            const clonP = p.cloneNode(true);
+            clonP.style.position = 'absolute';
+            clonP.style.visibility = 'hidden';
+            clonP.style.width = 'auto';
+            clonP.style.maxWidth = 'none';
+            document.body.appendChild(clonP);
+            const anchoP = clonP.offsetWidth;
+            document.body.removeChild(clonP);
+            if (anchoP > maxPartidoWidth) maxPartidoWidth = anchoP;
+          });
+          if (maxPartidoWidth === 0) maxPartidoWidth = 140;
+          const anchoFinal = maxPartidoWidth + 20;
+          columna.style.minWidth = anchoFinal + 'px';
+          columna.style.maxWidth = anchoFinal + 'px';
+          partidos.forEach(p => {
+            p.style.width = '100%';
+          });
+        });
+      }
+      requestAnimationFrame(() => {
+        requestAnimationFrame(ajustarAnchos);
+      });
+    }
+
+    // ================================================================
+    // 4. FUNCIONES PARA LA TABLA DE POSICIONES
+    // ================================================================
+    const SHEET_ID = "1YQLmxRkQmPnFeADo07s5AfmrnqT_9G10tuATr4v07yM";
+    const SHEET_NAME = "Tabla dinámica 6";
+    const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+
+    async function obtenerDatosTabla() {
+      try {
+        const response = await fetch(SHEET_URL, { cache: 'no-store', headers: { 'Accept': 'text/csv, application/csv, text/plain' } });
+        if (!response.ok) throw new Error(`HTTP ${response.status} - ${response.statusText}`);
+        const csvText = await response.text();
+        if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
+          throw new Error(`La hoja "${SHEET_NAME}" no es pública o no existe.`);
+        }
+        if (!csvText || csvText.trim() === '') throw new Error(`La hoja "${SHEET_NAME}" está vacía.`);
+        return csvText;
+      } catch (error) {
+        console.error("Error al obtener CSV:", error);
+        throw error;
+      }
+    }
+
+    function parseCSV(csv) {
+      const lines = [];
+      let currentLine = '';
+      let insideQuotes = false;
+      for (let i = 0; i < csv.length; i++) {
+        const char = csv[i];
+        if (char === '"') {
+          insideQuotes = !insideQuotes;
+        } else if (char === '\n' && !insideQuotes) {
+          lines.push(currentLine.trim());
+          currentLine = '';
+          continue;
+        }
+        currentLine += char;
+      }
+      if (currentLine.trim() !== '') lines.push(currentLine.trim());
+      if (lines.length < 2) return [];
+
+      function parseLine(line) {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        values.push(current.trim());
+        return values;
+      }
+
+      const headerLine = lines[0];
+      const headers = parseLine(headerLine).map(h => h.replace(/^"|"$/g, '').trim());
+      const data = [];
+      for (let i = 1; i < lines.length; i++) {
+        const values = parseLine(lines[i]);
+        if (values.length < headers.length) {
+          while (values.length < headers.length) values.push('');
+        }
+        const row = {};
+        headers.forEach((h, idx) => {
+          row[h] = values[idx] ? values[idx].replace(/^"|"$/g, '').trim() : '';
+        });
+        data.push(row);
+      }
+      return data;
+    }
+
+    function ordenarParticipantes(data) {
+      if (!data || data.length === 0) return [];
+      const headers = Object.keys(data[0] || {});
+      const colParticipante = headers.find(h => /participante|nombre|jugador|participants/i.test(h)) || headers[0];
+      const colPuntos = headers.find(h => /puntos|puntaje|pts|points/i.test(h)) || headers[1];
+      const colAciertos = headers.find(h => /aciertos|aciert|hits/i.test(h)) || headers[2];
+      const colExactos = headers.find(h => /exactos|exact|precise/i.test(h)) || headers[3];
+      const colInscripcion = headers.find(h => /inscripcion|insc|order|registro/i.test(h)) || headers[4];
+
+      const participantes = data.map(row => {
+        const clean = (val) => {
+          if (typeof val === 'string') return val.replace(/^"|"$/g, '').trim();
+          return val;
+        };
+        const nombre = clean(row[colParticipante]);
+        if (!nombre || nombre === '' || nombre === 'Participantes') return null;
+        const puntos = parseFloat(clean(row[colPuntos]).replace(',', '.')) || 0;
+        const aciertos = parseFloat(clean(row[colAciertos]).replace(',', '.')) || 0;
+        const exactos = parseFloat(clean(row[colExactos]).replace(',', '.')) || 0;
+        const inscripcion = parseFloat(clean(row[colInscripcion]).replace(',', '.')) || 0;
+        return { nombre, puntos, aciertos, exactos, inscripcion };
+      }).filter(p => p !== null);
+
+      participantes.sort((a, b) => {
+        if (a.puntos !== b.puntos) return b.puntos - a.puntos;
+        if (a.aciertos !== b.aciertos) return b.aciertos - a.aciertos;
+        if (a.exactos !== b.exactos) return b.exactos - a.exactos;
+        return a.inscripcion - b.inscripcion;
+      });
+      return participantes.slice(0, 11);
+    }
+
+    function renderizarTabla(participantes) {
+      const container = document.getElementById('tablaContainer');
+      if (!container) return;
+      if (!participantes || participantes.length === 0) {
+        container.innerHTML = `<p style="padding: 20px; text-align: center; color: #94a3b8;">No se encontraron participantes en la hoja "${SHEET_NAME}".</p>`;
+        return;
+      }
+      let leyendaHtml = `
+        <div class="leyenda-puntajes">
+          <span class="leyenda-chip"><span class="leyenda-color" style="background:#39d353;"></span> Clasifica 🏆</span>
+          <span class="leyenda-chip"><span class="leyenda-color" style="background:#ff4d4f;"></span> Descalificado 💀</span>
+        </div>
+      `;
+      let html = leyendaHtml;
+      html += `<table class="tabla-posiciones">
+        <thead><tr><th>#</th><th>Participantes</th><th>Puntos</th><th>Aciertos</th><th>Exactos</th><th>Puesto</th></tr></thead>
+        <tbody>`;
+      participantes.forEach((p, index) => {
+        const pos = index + 1;
+        let clasePosicion = (pos <= 6) ? 'clasifica' : 'descalifica';
+        html += `<tr>
+          <td class="posicion-celda ${clasePosicion}">${pos}</td>
+          <td class="col-participante">${p.nombre}</td>
+          <td>${p.puntos}</td>
+          <td>${p.aciertos}</td>
+          <td>${p.exactos}</td>
+          <td>${p.inscripcion}</td>
+        </tr>`;
+      });
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    }
+
+    // ================================================================
+    // 5. WIDGET "EN VIVO AHORA"
+    // ================================================================
+    function obtenerPartidosEnVivo(todos) {
+      const vivos = todos.filter(p => {
+        const elapsed = p.time_elapsed || '';
+        return elapsed.toLowerCase() === 'live';
+      });
+      vivos.sort((a, b) => Number(a.id) - Number(b.id));
+      return vivos;
+    }
+
+    function renderWidgetEnVivo(partidos) {
+      const contenedor = document.getElementById('widget-en-vivo');
+      if (!contenedor) return;
+      const vivos = obtenerPartidosEnVivo(partidos);
+      if (vivos.length === 0) {
+        contenedor.innerHTML = '<p style="color:#94a3b8; font-size:0.9rem; margin:0;">No hay partidos en vivo en este momento.</p>';
+        return;
+      }
+      let html = '';
+      vivos.forEach(p => {
+        const local = traducciones[p.home_team_name_en] || p.home_team_name_en || 'TBD';
+        const visita = traducciones[p.away_team_name_en] || p.away_team_name_en || 'TBD';
+        const golL = p.home_score !== undefined && p.home_score !== null ? p.home_score : '–';
+        const golV = p.away_score !== undefined && p.away_score !== null ? p.away_score : '–';
+        const banderaLocal = obtenerHtmlConBandera(local);
+        const banderaVisita = obtenerHtmlConBandera(visita);
+        html += `
+          <div class="partido-vivo">
+            <div class="equipo-vivo local">${banderaLocal} ${local}</div>
+            <div class="marcador">${golL} - ${golV} <span class="badge-vivo">● EN VIVO</span></div>
+            <div class="equipo-vivo visita">${banderaVisita} ${visita}</div>
+          </div>
+        `;
+      });
+      contenedor.innerHTML = html;
+    }
+
+    async function actualizarWidgetEnVivo() {
+      try {
+        const todos = await obtenerDatosAPI();
+        if (todos && todos.length > 0) renderWidgetEnVivo(todos);
+        else document.getElementById('widget-en-vivo').innerHTML = '<p style="color:#94a3b8; font-size:0.9rem;">No se encontraron partidos.</p>';
+      } catch (error) {
+        document.getElementById('widget-en-vivo').innerHTML = '<p style="color:#ef4444; font-size:0.9rem;">Error al cargar el marcador en vivo.</p>';
+        console.error('Error en actualizarWidgetEnVivo:', error);
+      }
+    }
+    setInterval(actualizarWidgetEnVivo, 30000);
+
+    // ================================================================
+    // 6. DETALLE DE APUESTAS DESDE HOJA "Apuestas_16avos"
+    // ================================================================
+    const SHEET_APUESTAS = "Apuestas_16avos";
+    const APUESTAS_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_APUESTAS)}`;
+
+    let datosApuestas = [];
+    let ordenApuestas = { columna: null, direccion: 'asc' };
+
+    const columnasDeseadas = [
+      { nombre: 'Participante', posibles: ['participante', 'jugador', 'nombre'] },
+      { nombre: 'Ronda', posibles: ['ronda', 'round'] },
+      { nombre: 'Local', posibles: ['local', 'equipo local'] },
+      { nombre: 'Visita', posibles: ['visita', 'equipo visita'] },
+      { nombre: 'GL', posibles: ['goles local', 'gol local', 'local.1'] },
+      { nombre: 'GV', posibles: ['goles visita', 'gol visita', 'visita.1'] },
+      { nombre: 'Multi', posibles: ['multi', 'multiplicador'] }
+    ];
+
+    function detectarColumnas(data) {
+      if (!data || data.length === 0) return {};
+      const headers = Object.keys(data[0]);
+      console.log('📋 Encabezados detectados en la hoja:', headers);
+      const mapeo = {};
+      columnasDeseadas.forEach(col => {
+        const encontrado = headers.find(h => 
+          col.posibles.some(p => h.toLowerCase().includes(p.toLowerCase()))
+        );
+        mapeo[col.nombre] = encontrado || null;
+      });
+      console.log('🔍 Mapeo de columnas:', mapeo);
+      return mapeo;
+    }
+
+    async function cargarApuestas() {
+      const container = document.getElementById('tablaApuestasContainer');
+      const estado = document.getElementById('estadoFiltradoApuestas');
+      if (!container) return;
+      container.innerHTML = '<p style="color:#94a3b8;">Cargando apuestas...</p>';
+      estado.textContent = '';
+      estado.className = 'estado';
+
+      try {
+        const response = await fetch(APUESTAS_URL, { cache: 'no-store', headers: { 'Accept': 'text/csv, application/csv, text/plain' } });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const csvText = await response.text();
+        if (csvText.trim().startsWith('<!DOCTYPE') || csvText.trim().startsWith('<html')) {
+          throw new Error(`La hoja "${SHEET_APUESTAS}" no es pública o no existe.`);
+        }
+        const data = parseCSV(csvText);
+        if (!data || data.length === 0) throw new Error('No se encontraron datos en la hoja.');
+        datosApuestas = data;
+        const mapeo = detectarColumnas(data);
+        window._mapeoApuestas = mapeo;
+        llenarFiltros(data, mapeo);
+        renderizarTablaApuestas(data, null, mapeo);
+        estado.textContent = `✅ ${data.length} apuestas cargadas.`;
+        estado.className = 'estado exito';
+        configurarFiltrosApuestas();
+      } catch (error) {
+        container.innerHTML = `<p style="color:#ef4444;">Error al cargar apuestas: ${error.message}</p>`;
+        estado.textContent = `❌ Error: ${error.message}`;
+        estado.className = 'estado error';
+        console.error('Error en cargarApuestas:', error);
+      }
+    }
+
+    function llenarFiltros(data, mapeo) {
+      const colPart = mapeo['Participante'];
+      const participantes = [...new Set(data.map(row => row[colPart] || '').filter(Boolean))].sort();
+      const selectPart = document.getElementById('filtroParticipanteApuestas');
+      if (selectPart) {
+        selectPart.innerHTML = '<option value="todos">Todos los participantes</option>';
+        participantes.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = p;
+          selectPart.appendChild(opt);
+        });
+      }
+
+      const colRonda = mapeo['Ronda'];
+      const rondas = [...new Set(data.map(row => row[colRonda] || '').filter(Boolean))].sort();
+      const selectRonda = document.getElementById('filtroRondaApuestas');
+      if (selectRonda) {
+        selectRonda.innerHTML = '<option value="todos">Todas las rondas</option>';
+        rondas.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value = r;
+          opt.textContent = r;
+          selectRonda.appendChild(opt);
+        });
+      }
+
+      const colLocal = mapeo['Local'];
+      const colVisita = mapeo['Visita'];
+      const partidos = [...new Set(data.map(row => {
+        const l = row[colLocal] || '';
+        const v = row[colVisita] || '';
+        return l && v ? `${l} - ${v}` : '';
+      }).filter(Boolean))].sort();
+      const selectPartido = document.getElementById('filtroPartidoApuestas');
+      if (selectPartido) {
+        selectPartido.innerHTML = '<option value="todos">Todos los partidos</option>';
+        partidos.forEach(p => {
+          const opt = document.createElement('option');
+          opt.value = p;
+          opt.textContent = p;
+          selectPartido.appendChild(opt);
+        });
+      }
+    }
+
+    function renderizarTablaApuestas(data, filtros, mapeo) {
+      const container = document.getElementById('tablaApuestasContainer');
+      if (!container) return;
+      if (!mapeo) mapeo = window._mapeoApuestas || detectarColumnas(data);
+
+      let datosFiltrados = data;
+      if (filtros) {
+        const texto = filtros.texto || '';
+        const participante = filtros.participante || 'todos';
+        const ronda = filtros.ronda || 'todos';
+        const partido = filtros.partido || 'todos';
+
+        const colPart = mapeo['Participante'];
+        const colRonda = mapeo['Ronda'];
+        const colLocal = mapeo['Local'];
+        const colVisita = mapeo['Visita'];
+
+        datosFiltrados = data.filter(row => {
+          const rowText = Object.values(row).join(' ').toLowerCase();
+          const coincideTexto = texto === '' || rowText.includes(texto.toLowerCase());
+          const coincideParticipante = participante === 'todos' || (row[colPart] || '') === participante;
+          const coincideRonda = ronda === 'todos' || (row[colRonda] || '') === ronda;
+          const partidoStr = `${row[colLocal] || ''} - ${row[colVisita] || ''}`;
+          const coincidePartido = partido === 'todos' || partidoStr === partido;
+          return coincideTexto && coincideParticipante && coincideRonda && coincidePartido;
+        });
+      }
+
+      if (ordenApuestas.columna !== null) {
+        const col = ordenApuestas.columna;
+        const dir = ordenApuestas.direccion;
+        datosFiltrados.sort((a, b) => {
+          let va = a[col] || '';
+          let vb = b[col] || '';
+          const numA = parseFloat(va.replace(',', '.'));
+          const numB = parseFloat(vb.replace(',', '.'));
+          if (!isNaN(numA) && !isNaN(numB)) {
+            return dir === 'asc' ? numA - numB : numB - numA;
+          }
+          va = va.toString().toLowerCase();
+          vb = vb.toString().toLowerCase();
+          return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
+        });
+      }
+
+      if (datosFiltrados.length === 0) {
+        container.innerHTML = '<p style="padding:20px; text-align:center; color:#94a3b8;">No hay apuestas que coincidan con los filtros.</p>';
+        return;
+      }
+
+      const columnasMostrar = columnasDeseadas.map(c => c.nombre);
+      let html = `<table class="tabla" id="tablaApuestasDinamica">
+        <thead><tr>`;
+      columnasMostrar.forEach(nombre => {
+        const real = mapeo[nombre];
+        const claseOrden = (ordenApuestas.columna === real) ? (ordenApuestas.direccion === 'asc' ? 'orden-activo' : 'orden-activo orden-desc') : '';
+        html += `<th data-col="${real}" class="${claseOrden}">${nombre}</th>`;
+      });
+      html += `</tr></thead><tbody>`;
+
+      datosFiltrados.forEach(row => {
+        html += `<tr>`;
+        columnasMostrar.forEach(nombre => {
+          const real = mapeo[nombre];
+          let valor = row[real] || '';
+          if (nombre === 'Multi' && valor && !isNaN(parseFloat(valor))) {
+            valor = `X ${valor}`;
+          }
+          html += `<td>${escapeHtml(valor)}</td>`;
+        });
+        html += `</tr>`;
+      });
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+
+      const estado = document.getElementById('estadoFiltradoApuestas');
+      if (estado) {
+        estado.textContent = `Mostrando ${datosFiltrados.length} de ${data.length} apuestas`;
+        estado.className = 'estado';
+      }
+
+      document.querySelectorAll('#tablaApuestasDinamica th').forEach(th => {
+        th.addEventListener('click', function() {
+          const col = this.dataset.col;
+          if (ordenApuestas.columna === col) {
+            ordenApuestas.direccion = ordenApuestas.direccion === 'asc' ? 'desc' : 'asc';
+          } else {
+            ordenApuestas.columna = col;
+            ordenApuestas.direccion = 'asc';
+          }
+          const filtrosActuales = obtenerFiltrosActuales();
+          renderizarTablaApuestas(datosApuestas, filtrosActuales, window._mapeoApuestas);
+        });
+      });
+    }
+
+    function obtenerFiltrosActuales() {
+      const texto = document.getElementById('filtroTextoApuestas')?.value || '';
+      const participante = document.getElementById('filtroParticipanteApuestas')?.value || 'todos';
+      const ronda = document.getElementById('filtroRondaApuestas')?.value || 'todos';
+      const partido = document.getElementById('filtroPartidoApuestas')?.value || 'todos';
+      return { texto, participante, ronda, partido };
+    }
+
+    function configurarFiltrosApuestas() {
+      const inputTexto = document.getElementById('filtroTextoApuestas');
+      const selectPart = document.getElementById('filtroParticipanteApuestas');
+      const selectRonda = document.getElementById('filtroRondaApuestas');
+      const selectPartido = document.getElementById('filtroPartidoApuestas');
+      const btnLimpiar = document.getElementById('limpiarFiltrosApuestas');
+
+      const aplicar = () => {
+        const filtros = obtenerFiltrosActuales();
+        renderizarTablaApuestas(datosApuestas, filtros, window._mapeoApuestas);
+      };
+
+      inputTexto?.addEventListener('input', aplicar);
+      selectPart?.addEventListener('change', aplicar);
+      selectRonda?.addEventListener('change', aplicar);
+      selectPartido?.addEventListener('change', aplicar);
+
+      btnLimpiar?.addEventListener('click', () => {
+        if (inputTexto) inputTexto.value = '';
+        if (selectPart) selectPart.value = 'todos';
+        if (selectRonda) selectRonda.value = 'todos';
+        if (selectPartido) selectPartido.value = 'todos';
+        ordenApuestas.columna = null;
+        ordenApuestas.direccion = 'asc';
+        aplicar();
+      });
+    }
+
+    // ================================================================
+    // 7. FLUJO PRINCIPAL
+    // ================================================================
+    async function cargarFixture() {
+      const estadoDiv = document.getElementById('estadoCargaFixture');
+      const container = document.getElementById('bracketContainer');
+      estadoDiv.textContent = '⏳ Cargando datos desde la API...';
+      estadoDiv.className = 'estado-carga';
+      container.innerHTML = '';
+
+      try {
+        const todos = await obtenerDatosAPI();
+        if (!todos || todos.length === 0) throw new Error('No se recibieron partidos de la API.');
+        const partidosPorTipo = organizarPartidos(todos);
+        const totalKnockouts = Object.values(partidosPorTipo).reduce((sum, arr) => sum + arr.length, 0);
+        estadoDiv.textContent = `✅ ${totalKnockouts} partidos de eliminación directa cargados (hasta cuartos).`;
+        estadoDiv.className = 'estado-carga exito';
+        renderizarBracket(partidosPorTipo);
+      } catch (error) {
+        estadoDiv.textContent = `❌ Error: ${error.message}`;
+        estadoDiv.className = 'estado-carga error';
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #991b1b; background: #fee2e2; border-radius: var(--radius-sm); border: 1px solid #fecaca;">
+          <p style="font-weight: bold; font-size: 1.1rem;">⚠️ No se pudieron cargar los datos</p>
+          <p style="margin-top: 8px;">${error.message}</p>
+          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica tu conexión o intenta más tarde.</p>
+          <button onclick="location.reload()" style="margin-top: 16px; border: 1px solid #991b1b; background: white; padding: 8px 20px; border-radius: 999px; cursor: pointer; font-weight: 600;">🔄 Intentar de nuevo</button>
+        </div>`;
+        console.error("Error en cargarFixture:", error);
+      }
+    }
+
+    async function cargarTabla() {
+      const estadoDiv = document.getElementById('estadoCargaTabla');
+      const container = document.getElementById('tablaContainer');
+      estadoDiv.textContent = '⏳ Cargando datos...';
+      estadoDiv.className = 'estado-carga';
+      container.innerHTML = '';
+
+      try {
+        const csv = await obtenerDatosTabla();
+        const data = parseCSV(csv);
+        if (!data || data.length === 0) throw new Error(`No se encontraron datos.`);
+        const top11 = ordenarParticipantes(data);
+        estadoDiv.textContent = `✅ ${top11.length} participantes cargados.`;
+        estadoDiv.className = 'estado-carga exito';
+        renderizarTabla(top11);
+      } catch (error) {
+        estadoDiv.textContent = `❌ Error: ${error.message}`;
+        estadoDiv.className = 'estado-carga error';
+        container.innerHTML = `<div style="padding: 20px; text-align: center; color: #991b1b; background: #fee2e2; border-radius: var(--radius-sm); border: 1px solid #fecaca;">
+          <p style="font-weight: bold; font-size: 1.1rem;">⚠️ No se pudo cargar la tabla</p>
+          <p style="margin-top: 8px;">${error.message}</p>
+          <p style="margin-top: 12px; font-size: 0.9rem; color: #64748b;">Verifica que la hoja con los datos sea pública.</p>
+        </div>`;
+        console.error("Error en cargarTabla:", error);
+      }
+    }
+
+    async function inicializarTodo() {
+      await Promise.all([cargarFixture(), cargarTabla()]);
+      await actualizarWidgetEnVivo();
+      await cargarApuestas();
+    }
+
+    // ================================================================
+    // 8. INICIO
+    // ================================================================
+    iniciarSistemaUsuario();
+    inicializarTodo();
+    document.getElementById('btnRecargar').addEventListener('click', inicializarTodo);
+
+  })();
+</script>
+</body>
+</html>
